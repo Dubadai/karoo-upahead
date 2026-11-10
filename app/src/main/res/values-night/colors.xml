@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bg">#FF0B0B0B</color>
+    <color name="text">#FFFFFFFF</color>
+    <color name="text_secondary">#FFB4B2A9</color>
+    <color name="tile_tonal">#1FFFFFFF</color>
+    <color name="accent_bg">#FF97C459</color>
+    <color name="accent_fg">#FF173404</color>
+</resources>

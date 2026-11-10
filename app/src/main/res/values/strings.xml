@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">DDB UpAhead</string>
+    <string name="extension_name">DDB UpAhead</string>
+    <string name="field_name">UpAhead</string>
+    <string name="field_description">The route ahead with its feed stops, timing and cut-offs</string>
+    <string name="action_range">UpAhead: next range</string>
+</resources>

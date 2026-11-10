@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Water: a drop (picked 2026-11-10, mock round 7 option A), shown on the Karoo's climb blue -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
+    <path android:fillColor="#FFFFFFFF" android:pathData="M12,3.6c-0.4,0.5 -6,7.2 -6,11.2a6,6 0,0 0,12 0c0,-4 -5.6,-10.7 -6,-11.2z" />
+</vector>

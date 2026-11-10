@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The field: the kit's split picture (KarooField.views) in [content]; [taps]: the graph (sized in code), the next range,
+     round and round, like the Karoo's own elevation graph (2026-11-10); [poi] on top of it: tap areas over the
+     stops and the info box, so a stop opens its card. FrameLayouts, not Views (a plain View can't be inflated in
+     a field). The header and the km strip take no taps, so the Karoo's long-press (change field) works there. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <FrameLayout
+        android:id="@+id/content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <FrameLayout
+        android:id="@+id/taps"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="@string/action_range" />
+
+    <FrameLayout
+        android:id="@+id/poi"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+</FrameLayout>

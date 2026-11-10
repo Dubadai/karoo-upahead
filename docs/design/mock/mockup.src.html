@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UpAhead Mock</title>
+<style>
+@font-face { font-family: Plex; src: url(__FONT_REG__); font-weight: 400; }
+@font-face { font-family: Plex; src: url(__FONT_MED__); font-weight: 500; }
+@font-face { font-family: Plex; src: url(__FONT_SEMI__); font-weight: 600; }
+@font-face { font-family: Plex; src: url(__FONT_BOLD__); font-weight: 700; }
+:root { --bg:#f6f5f2; --fg:#1d1d1b; --muted:#6b6a66; --box:#ecebe6; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#161615; --fg:#ecebe7; --muted:#a3a29c; --box:#232321; } }
+:root[data-theme="dark"] { --bg:#161615; --fg:#ecebe7; --muted:#a3a29c; --box:#232321; }
+* { box-sizing: border-box; }
+body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.5 -apple-system, system-ui, sans-serif; }
+main { max-width: 1100px; margin: 0 auto; padding: 32px 16px 64px; }
+h1 { font-size: 28px; margin: 0 0 4px; } h2 { font-size: 20px; margin: 32px 0 6px; } p { color: var(--muted); max-width: 76ch; }
+.flow { display:flex; flex-wrap:wrap; gap: 18px; } .step { flex: 0 1 240px; max-width: 240px; }
+.step canvas { display:block; max-width:100%; height:auto; } .step h3 { font-size: 15px; margin: 8px 0 2px; } .step p { font-size: 13px; margin: 0; }
+.box { background: var(--box); border-radius: 12px; padding: 4px 20px; margin-top: 28px; } .box li { margin: 8px 0; }
+</style>
+</head>
+<body>
+<main>
+<h1>UpAhead · mock round 6</h1>
+<p>Mallorca 312 as the test route (the profile here is traced from the organiser's picture; the real one comes from the GPX).
+Ride in progress with our showcase numbers: 1:12:40, 10:24, 280 W, 132 bpm, 24.6 km ridden. Icons as picked: style B, stacked column per stop.</p>
+<p><b>Round 6:</b> the rider picks the header's info (next cut, feed, water, toilet or off) and shows it as distance or time (section 3b, Settings).</p>
+<p><b>Round 5:</b> the next cut-off in the header (“NEXT CUT 11:20”), the range as just km (“312 KM”, “50 KM”); Large icons larger (86 / 72 / 58 px), Small a bit smaller (56 / 48 / 40 px); bigger glyphs in the yellow (and red) badges.</p>
+<p><b>Round 4:</b> climb blue is the graph colour (picked); icons even bigger: Small 62 / 52 / 44 px, Large 74 / 62 / 52 px (full page / half page / tiles).</p>
+<p><b>Round 3:</b> Karoo purple and Karoo yellow graphs to compare with climb blue; icons on the graph much bigger (Small 50 / 42 / 36 px, Large 62 / 52 / 44 px for full page / half page / tiles).</p>
+<p><b>Round 2:</b> the graph fills the tile to its bottom edge; icons and text sit in their own band above the graph, never on it; dashed lines are always straight down; only the next cut-off shows (with its time); “+3” without a circle; stops closer than an icon merge into one column (zoom in to see them apart); bigger map icons.</p>
+
+<h2>1 · Two graph styles</h2>
+<p><b>Simple</b> looks like the Karoo's own elevation graph (a line with a see-through fill), but in the Karoo's climb blue instead of its yellow, so it doesn't look like the Karoo's own graph.
+<b>Detailed</b> colours the slope by grade with the Karoo's climb colours, like Mountaineer. Both: the ridden part greyed, ▼ is you.</p>
+<div class="flow">
+  <div class="step"><div id="full-simple"></div><h3>Full page · Simple · whole route</h3></div>
+  <div class="step"><div id="full-detailed"></div><h3>Full page · Detailed · whole route</h3></div>
+  <div class="step"><div id="full-yellow"></div><h3>Simple in Karoo yellow (the Karoo's own elevation colours)</h3></div>
+  <div class="step"><div id="full-purple"></div><h3>Simple in Karoo purple (the lap colour)</h3></div>
+  <div class="step"><div id="half-yellow"></div><h3>Half page · Karoo yellow</h3></div>
+  <div class="step"><div id="half-purple"></div><h3>Half page · Karoo purple</h3></div>
+</div>
+
+<h2>2 · Sizes</h2>
+<p>Half page shows the stacked columns. Two tiles and one tile have no room for columns: one icon per stop (a feed stop shows the fork and bottle; timing in yellow, cut-offs in red).</p>
+<div class="flow">
+  <div class="step"><div id="half"></div><h3>Half page · whole route</h3></div>
+  <div class="step"><div id="small"></div><h3>Two tiles + one tile · next 50 km</h3></div>
+</div>
+
+<h2>2b · Icon size and priority (Settings)</h2>
+<p>Icons never go below 24 px (≈ 13 dp). <b>Large</b> icons: a column shows what fits, the rider's top priority nearest the graph, and the rest as <b>+2</b>.
+The priority list is set in Settings (drag to reorder).</p>
+<div class="flow">
+  <div class="step"><div id="full-large"></div><h3>Full page · Large icons</h3></div>
+  <div class="step"><div id="half-large"></div><h3>Half page · Large · default priority (timing, cut-offs, food, water, toilets, mechanic)</h3></div>
+  <div class="step"><div id="half-large-water"></div><h3>Half page · Large · water first</h3></div>
+</div>
+
+<h2>3 · Ranges (tap the field or a remote button)</h2>
+<p>Whole route → 100 → 50 → 10 → 5 → 1 km ahead, then back to the whole route. The header says which. When the next stop is beyond the range, it shows at the right edge with how far it is.</p>
+<div class="flow">
+  <div class="step"><div id="ranges"></div><h3>The cycle (a GIF when exported)</h3></div>
+  <div class="step"><div id="range-100"></div><h3>100 km</h3></div>
+  <div class="step"><div id="range-50"></div><h3>50 km</h3></div>
+  <div class="step"><div id="range-10"></div><h3>10 km</h3></div>
+  <div class="step"><div id="range-5"></div><h3>5 km · Detailed</h3></div>
+  <div class="step"><div id="range-1"></div><h3>1 km · Detailed</h3></div>
+</div>
+
+<h2>3b · At the top (Settings)</h2>
+<p>The rider picks what the header shows: the next cut-off, feed stop, water or toilet (or nothing), as a distance or as a time.
+Time is when you reach a cut-off (green if before it, red if after) or how long until the next stop. It comes from your own speed on this ride per grade (so riding in a bunch on the flat counts), with Mountaineer's power physics where there's nothing learned yet.
+Here the showcase clock (10:24 at km 24.6) is late for a real 312 start, so the 11:20 cut shows red.</p>
+<div class="flow">
+  <div class="step"><div id="head-cut-km"></div><h3>Next cut · distance</h3></div>
+  <div class="step"><div id="head-cut-time"></div><h3>Next cut · time (ETA)</h3></div>
+  <div class="step"><div id="head-feed-km"></div><h3>Next feed · distance</h3></div>
+  <div class="step"><div id="head-feed-time"></div><h3>Next feed · time to go</h3></div>
+  <div class="step"><div id="head-toilet-km"></div><h3>Next toilet · distance (50 km range)</h3></div>
+</div>
+
+<h2>4 · Map</h2>
+<p>The Karoo draws every route POI itself (grey pins, its own icons), and an extension can't hide or change them. UpAhead adds only what the Karoo can't show:
+a small badge on the pin's corner for timing and cut-offs (like the Karoo's own pin badges), and the timed section as black dashes on the route.</p>
+<div class="flow">
+  <div class="step"><div id="map"></div><h3>Map near Puig Major</h3></div>
+</div>
+
+<h2>5 · Settings</h2>
+<div class="flow">
+  <div class="step"><div id="settings-top"></div><h3>Settings, top</h3></div>
+  <div class="step"><div id="settings-mid"></div><h3>Settings, at the top / show as</h3></div>
+  <div class="step"><div id="settings-prio"></div><h3>Settings, icon size and priority</h3></div>
+  <div class="step"><div id="settings-end"></div><h3>Settings, end</h3></div>
+</div>
+
+<div class="box"><ol>
+<li><b>Graph style:</b> Simple (climb blue) as the default and Detailed as the option? Or Simple in another colour?</li>
+<li><b>Icon size and priority:</b> Small / Large and the drag-to-order list (a new settings-kit piece). Default order OK?</li>
+<li><b>Small sizes:</b> one icon per stop (no stacks) at two tiles and one tile. OK?</li>
+<li><b>Ranges:</b> Whole, 100, 50, 10, 5, 1 km, starting at Whole. OK, or a different set?</li>
+<li><b>Map:</b> only the corner badges and the dashed timed section (the Karoo's own pins stay as they are). OK?</li>
+</ol></div>
+</main>
+<script>
+/*__KAROO_DEVICE_JS__*/
+const IMGS = "__IMGS__";
+const ICONS = "__ICONS__";
+const FRAME_PNG = '__FRAME__';
+const GLYPHS = /*__UPAHEAD_GLYPHS__*/{};
+const HASH = new URLSearchParams(location.hash.slice(1));
+const SHOT = HASH.get('shot'), THEME = HASH.get('theme') || 'light';
+const FRAME = +(HASH.get('frame') || 0), FRAMES = +(HASH.get('frames') || 1);
+const W = SHOT ? 1100 : 240;
+const BACKDROP = THEME === 'dark' ? 'linear-gradient(#120E0B,#3F342E)' : 'linear-gradient(#7E9CB4,#F1F4F6)';   // Night / Sky
+/*__KIT_JS__*/
+
+// ---------- Karoo glyph paths (karoo-common KarooType.Glyph, viewport ~38) ----------
+const KG = {
+  BOLT: 'M28,16.002L19.002,16.002 19.002,2 10,22 18.999,22 18.999,36z',
+  HEART: 'M29.55,16.936l-10.568,12.43 -10.568,-12.43 -0.007,0.006c-2.141,-2.518 -1.827,-6.301 0.7,-8.433 2.355,-1.99 5.814,-1.852 8.005,0.216 0.16,0.15 0.312,0.31 0.457,0.48 0.882,1.04 1.348,2.293 1.413,3.558 0.064,-1.265 0.53,-2.518 1.412,-3.557 0.146,-0.171 0.297,-0.332 0.457,-0.48 2.191,-2.07 5.65,-2.206 8.005,-0.217 2.527,2.132 2.841,5.915 0.7,8.433l-0.006,-0.006zM30.788,6.236c-3.469,-2.927 -8.515,-2.785 -11.806,0.156 -3.292,-2.94 -8.338,-3.083 -11.807,-0.156 -3.79,3.2 -4.258,8.854 -1.048,12.63l12.855,15.12 12.854,-15.12c3.21,-3.776 2.741,-9.43 -1.048,-12.63z',
+  SPEED: 'M18.988,7C23.979,7 28.401,9.431 31.123,13.172C32.917,15.633 33.974,18.661 33.974,21.936C33.974,25.211 32.917,28.24 31.123,30.7L28.693,28.945C30.128,26.977 30.973,24.555 30.973,21.936C30.973,19.317 30.127,16.896 28.692,14.927C26.516,11.936 22.979,9.992 18.988,9.992C14.996,9.992 11.46,11.936 9.282,14.927C7.847,16.896 7.001,19.317 7.001,21.936C7.001,24.555 7.846,26.977 9.282,28.945L6.851,30.701C5.057,28.241 4,25.211 4,21.936C4,18.661 5.057,15.633 6.851,13.172C9.574,9.431 13.997,7 18.988,7ZM24.691,14.706L20.638,26.667C19.952,27.851 18.426,28.263 17.238,27.58C16.05,26.896 15.636,25.375 16.322,24.191L24.691,14.706Z',
+  DISTANCE: 'M28.5,24c3.038,0 5.5,2.462 5.5,5.5S31.538,35 28.5,35 23,32.538 23,29.5s2.462,-5.5 5.5,-5.5zM27.228,6.987c2.338,0 4.398,1.186 5.609,2.988 0.718,1.067 1.136,2.351 1.136,3.733 0,1.382 -0.418,2.665 -1.136,3.733 -1.21,1.803 -3.271,2.988 -5.609,2.988H10.744c-2.069,0 -3.746,1.672 -3.746,3.734 0,2.063 1.677,3.734 3.746,3.734h9.24v2.988l-9.24,-0.001c-2.339,0 -4.399,-1.186 -5.608,-2.987C4.418,26.83 4,25.546 4,24.163c0,-1.382 0.418,-2.667 1.136,-3.734 1.21,-1.802 3.27,-2.988 5.608,-2.988h16.484c2.07,0 3.747,-1.671 3.747,-3.733 0,-2.062 -1.678,-3.733 -3.747,-3.733h-9.242V6.987zM9.5,3C12.538,3 15,5.462 15,8.5S12.538,14 9.5,14 4,11.538 4,8.5 6.462,3 9.5,3z',
+  GRADE: 'M33.97,16.974L33.97,29.92L4,29.92L4,26.93l13.986,-6.97 6.993,3.983 8.991,-6.97zM33.97,11v2.987l-8.99,6.97 -6.994,-3.983L4,23.944v-2.987l13.986,-6.97 6.993,3.983L33.97,11z',
+};
+function kg(ctx, name, x, y, s, col) { ctx.save(); ctx.translate(x, y); ctx.scale(s / 38, s / 38); ctx.fillStyle = col; ctx.fill(new Path2D(KG[name])); ctx.restore(); }
+
+// ---------- Colours (Karoo ride app) ----------
+const DARKM = THEME === 'dark';
+const INK = DARKM ? '#FFFFFF' : '#000000', PAPER = DARKM ? '#000000' : '#FFFFFF';
+const CLIMB_COL = ['#60EEB2', '#00B988', '#FFF500', '#FB8C65', '#FE581F', '#D60404', '#B700A2'];   // climb1..7
+const gradeCol = g => CLIMB_COL[g < 3 ? 0 : g < 5 ? 1 : g < 7 ? 2 : g < 9 ? 3 : g < 11 ? 4 : g < 13 ? 5 : 6];
+const STYLE = {   // line, fill (the Karoo's elevation_background is the line colour at 50 %)
+  blue:   DARKM ? { line: '#A3D5FF', fill: 'rgba(163,213,255,0.5)' } : { line: '#2386D9', fill: 'rgba(35,134,217,0.5)' },   // climb_blue_400 / 500
+  purple: DARKM ? { line: '#EABFFF', fill: 'rgba(162,82,204,0.6)' } : { line: '#A252CC', fill: 'rgba(162,82,204,0.5)' },   // lap colour: purple_500 (dark: purple_400 line)
+  yellow: DARKM ? { line: '#FFE900', fill: 'rgba(255,233,0,0.5)' }   : { line: '#CBBA00', fill: 'rgba(203,186,0,0.5)' },    // elevation_line / _background
+};
+const RIDDEN = DARKM ? { line: '#6A6A6A', fill: 'rgba(120,120,120,0.45)' } : { line: '#B5B5B5', fill: 'rgba(160,160,160,0.35)' };
+const AXIS = DARKM ? '#313131' : '#F4F4F4', MUTED = DARKM ? '#B4B2A9' : '#6F6F6F';
+
+// ---------- Mallorca 312 (traced from the organiser's profile; the build reads the route) ----------
+const KM_TOTAL = 312, YOU = 24.6;
+const CP = [[0,5],[8,15],[18,40],[25,70],[30,300],[32.9,519],[36,330],[42,250],[46,380],[50,520],[55.2,899],[60,650],[66,300],[71,40],[74.4,226],[78,110],
+  [83,200],[87.3,450],[90,300],[93.1,550],[97,320],[101,250],[106,120],[110,200],[114.7,330],[118,200],[122.5,358],[128,120],[132,90],[135.3,135],[139,160],
+  [142.5,410],[146,250],[150.2,465],[154,280],[158,200],[165,130],[175,160],[185,140],[192.7,180],[200,120],[212,140],[225,110],[241,140],[255,90],
+  [265,160],[275,230],[285.2,170],[295,60],[305,20],[312,5]];
+let NOISE = 1;
+function elev(km) {
+  let i = CP.findIndex(p => p[0] >= km); if (i <= 0) return CP[0][1];
+  const [a, ea] = CP[i - 1], [b, eb] = CP[i], t = (km - a) / (b - a), s = (1 - Math.cos(Math.PI * t)) / 2;
+  return ea + (eb - ea) * s + NOISE * (6 * Math.sin(km * 1.7) + 3 * Math.sin(km * 4.3) + 0.8 * Math.sin(km * 11.1));
+}
+const ALL4 = ['food', 'water', 'restroom', 'mechanic'];
+const STOPS = [   // one column per km: bottom → top (timing, cut-off, then food, water, toilets, mechanic)
+  { km: 50, items: ['timing_start'], name: 'Timing start' },
+  { km: 55.2, items: ['timing_end', ...ALL4], name: 'Puig Major' },
+  { km: 101, items: ['cutoff', ...ALL4], name: 'Sa Batalla', cut: '11:20' },
+  { km: 114.7, items: ['food', 'water', 'restroom'], name: 'Coll des Pi' },
+  { km: 135.3, items: ALL4, name: 'Es Capdellà' },
+  { km: 158, items: ALL4, name: 'Sa Granja' },
+  { km: 192.7, items: ['cutoff', ...ALL4], name: 'Lloseta', cut: '16:40' },
+  { km: 241, items: ALL4, name: 'Ariany' },
+  { km: 285.2, items: ['cutoff', ...ALL4], name: 'Artà', cut: '19:55' },
+];
+const TIMED = [50, 55.2];
+const GROUP_OF = { timing_start: 'timing', timing_end: 'timing', cutoff: 'cutoff', food: 'food', water: 'water', restroom: 'toilets', mechanic: 'mechanic' };
+const DEFAULT_PRIO = ['timing', 'cutoff', 'food', 'water', 'toilets', 'mechanic'];
+const SUMMITS = [[32.9, 519], [55.2, 899], [74.4, 226], [87.3, 450], [93.1, 550], [114.7, 330], [122.5, 358], [142.5, 410], [150.2, 465]];
+
+// ---------- Icons (style B), drawn from SVG ----------
+const SIG = { timing_start: 'y', timing_end: 'y', timed: 'y', untimed: 'y', finish: 'y', control: 'y', cutoff: 'r', caution: 'r' };
+const GLYPH_IMG = {};
+function svgOf(name, fg, bg, kind) {
+  const g = GLYPHS[name].replaceAll('currentColor', fg).replaceAll('KNOCK', bg || PAPER);
+  if (kind === 'bare') return `<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 24 24"><g transform="translate(12 12) scale(1.1) translate(-12 -12)">${g}</g></svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="${bg}"/><g transform="translate(12 12) scale(${SIG[name] ? 0.86 : GLYPHS['_new'].includes(name) ? 0.68 : 0.84}) translate(-12 -12)">${g}</g></svg>`;
+}
+const badgeColours = name => SIG[name] === 'y' ? ['#000000', '#FFE900'] : SIG[name] === 'r' ? ['#FFFFFF', '#D62D2D'] : ['#FFFFFF', '#484848'];
+async function loadGlyphs() {
+  const jobs = [];
+  for (const name of Object.keys(GLYPHS)) { if (name === '_new') continue;
+    const [fg, bg] = badgeColours(name);
+    jobs.push(['b:' + name, svgOf(name, fg, bg)]);
+    jobs.push(['k:' + name, svgOf(name, '#1C2E2E', '#FFFFFF', 'bare')]);
+    jobs.push(['w:' + name, svgOf(name, '#FFFFFF', '#484848', 'bare')]); }
+  await Promise.all(jobs.map(async ([k, s]) => { GLYPH_IMG[k] = await loadImg('data:image/svg+xml;utf8,' + encodeURIComponent(s)); }));
+}
+const badge = (ctx, name, cx, cy, px) => ctx.drawImage(GLYPH_IMG['b:' + name], cx - px / 2, cy - px / 2, px, px);
+
+// ---------- Text helpers (Karoo numbers: Plex Regular at 90 % width, a bit tighter) ----------
+function txt(ctx, s, { x, y, size, weight = 400, color = INK, align = 'left', cond = false, maxW = 1e9 }) {
+  ctx.save(); ctx.font = `${weight} ${size}px Plex`; ctx.letterSpacing = cond ? `${-0.02 * size}px` : '0px';
+  const sx = cond ? 0.9 : 1; let w = ctx.measureText(s).width * sx; let k = 1; if (w > maxW) { k = maxW / w; w = maxW; }
+  ctx.translate(x, y); ctx.scale(sx * k, k); ctx.textAlign = align; ctx.fillStyle = color; ctx.fillText(s, 0, 0); ctx.restore(); return w;
+}
+// The Karoo's own header: icon 12 px from the left in a 25 px box, capitals ending 9 px from the right.
+function header(ctx, r, label, icon = 'GRADE') {
+  const big = r.h >= 150, size = big ? 23 : 20, base = r.y + (r.h >= 168 ? 26 : 21) + size * 0.72;
+  kg(ctx, icon, r.x + 12, base - 25, 27, INK);
+  txt(ctx, label, { x: r.x + r.w - 9, y: base, size, weight: 500, align: 'right', cond: true, maxW: r.w - 60 });
+  return base;
+}
+function stock(ctx, r, f) {
+  const base = header(ctx, r, f.label, f.icon);
+  const size = Math.min(r.h * 0.56, 112);
+  txt(ctx, f.value, { x: r.x + r.w - 9, y: r.y + r.h - r.h * 0.1, size, align: 'right', cond: true, maxW: r.w - 18 });
+}
+const STOCK = [
+  { label: '3S POWER', value: '280', icon: 'BOLT' }, { label: 'HEART RATE', value: '132', icon: 'HEART' },
+  { label: 'SPEED', value: '28.4', icon: 'SPEED' }, { label: 'DISTANCE', value: '24.6', icon: 'DISTANCE' },
+];
+
+// ---------- A ride page: status bar, then tiles ----------
+const TOP = 84, ROW = 168, TGAP = 12, COL = [1, 241], CW = 238;
+const rowY = i => TOP + i * (ROW + TGAP);
+function ridePage(ctx, tiles) {
+  ctx.fillStyle = DARKM ? '#484848' : '#DDDDDD'; ctx.fillRect(0, 0, 480, 800);
+  ctx.strokeStyle = INK; ctx.fillStyle = INK; ctx.lineWidth = 2.5;
+  ctx.fillStyle = DARKM ? '#000' : '#FFF'; ctx.fillRect(0, 0, 480, 64);
+  ctx.strokeStyle = INK; ctx.beginPath(); ctx.arc(22, 32, 11, 0, 7); ctx.stroke(); ctx.fillStyle = INK; ctx.beginPath(); ctx.arc(22, 32, 5, 0, 7); ctx.fill();
+  txt(ctx, '1:12:40', { x: 48, y: 48, size: 40, cond: true });
+  txt(ctx, '100%', { x: 330, y: 46, size: 30, cond: true, align: 'right' });
+  txt(ctx, '10:24', { x: 470, y: 48, size: 40, cond: true, align: 'right' });
+  let n = 0;
+  for (const t of tiles) {
+    ctx.save(); ctx.beginPath(); ctx.roundRect(t.x + 0.5, t.y + 0.5, t.w - 1, t.h - 1, 14); ctx.fillStyle = PAPER; ctx.fill(); ctx.clip();
+    t.fn ? t.fn(ctx, t) : stock(ctx, t, STOCK[n++ % STOCK.length]);
+    ctx.restore();
+    ctx.beginPath(); ctx.roundRect(t.x + 0.5, t.y + 0.5, t.w - 1, t.h - 1, 14); ctx.strokeStyle = '#7D7D7D'; ctx.lineWidth = 1; ctx.stroke();
+  }
+}
+
+// ---------- The UpAhead field ----------
+// o: { style: 'simple'|'detailed', colour: 'blue'|'yellow', range: 0 (whole) | km, compact: one icon per stop }
+function upahead(ctx, r, o = {}) {
+  const style = o.style || 'simple', col = STYLE[o.colour || 'blue'], range = o.range || 0;
+  const compact = o.compact ?? r.h < 300;
+  // header: the range as just km on the right; the next cut-off on the left, after the icon
+  const nextCut = STOPS.find(s => s.cut && s.km > YOU);
+  const hb = header(ctx, r, `${range || KM_TOTAL} KM`);
+  headInfo(ctx, r, hb, o.head || 'cut', o.as || 'km');
+  NOISE = range && range <= 10 ? 1 : 0;
+  const k0 = range ? Math.max(0, YOU - range * 0.1) : 0, k1 = range ? Math.min(KM_TOTAL, k0 + range) : KM_TOTAL;
+  const L = r.x, R = r.x + r.w, bottom = r.y + r.h, plotTop = hb + 12;   // the graph runs edge to edge, down to the tile's bottom
+  const X = km => L + (km - k0) / (k1 - k0) * (R - L);
+  // icon size: never under 24 px (≈ 13 dp) so it stays readable on the bike
+  const large = o.size === 'large';
+  const icon = compact ? (large ? 58 : 40) : r.h >= 600 ? (large ? 86 : 56) : (large ? 72 : 48);
+  const prio = o.prio || DEFAULT_PRIO, rank = n => prio.indexOf(GROUP_OF[n]);
+  // stops in view; stops closer than an icon merge into one column at the first one's km (zoom in to see them apart)
+  const clusters = [];
+  for (const s of STOPS.filter(s => s.km >= k0 && s.km <= k1)) {
+    const items = s.items.filter(n => n !== 'cutoff' || s === nextCut);
+    const last = clusters[clusters.length - 1];
+    if (last && X(s.km) - last.x < icon + 4) { for (const n of items) if (!last.items.includes(n)) last.items.push(n); if (s === nextCut) last.cut = s.cut; }
+    else clusters.push({ km: s.km, x: Math.min(Math.max(X(s.km), L + icon / 2 + 4), R - icon / 2 - 4), items: [...items], cut: s === nextCut ? s.cut : null });
+  }
+  // a column shows what fits, top priority nearest the graph, the rest as "+n"
+  // "+n" is a text line above the icons (never instead of one), so every stop keeps at least one icon
+  const PLUS = Math.round(icon * 0.5) + 6;
+  const maxStack = Math.max(1, Math.floor(((bottom - plotTop) * 0.5 - PLUS) / (icon + 3)));
+  const pick = cl => { const sorted = [...cl.items].sort((a, b) => rank(a) - rank(b));
+    if (compact) { const t = sorted[0]; return [(t === 'food' || t === 'water') && cl.items.length > 2 ? 'feed' : t]; }
+    return sorted.length <= maxStack ? sorted : [...sorted.slice(0, maxStack), '+' + (sorted.length - maxStack)]; };
+  const shown = cl => pick(cl).filter(n => n[0] !== '+');
+  const tallest = clusters.reduce((m, cl) => Math.max(m, shown(cl).length), 0);
+  const plusRow = clusters.some(cl => pick(cl).length > shown(cl).length) ? PLUS : 0;
+  const cutRow = 0;
+  const next = STOPS.find(s => s.km > YOU), nextBeyond = range && next && next.km > k1;
+  // everything above the graph gets its own band, so text and icons never touch the graph
+  const colsH = tallest ? tallest * (icon + 3) + plusRow : 0, bandH = Math.max(colsH, nextBeyond ? 34 : 0);
+  const showSummits = !compact && (range || r.h >= 600);
+  const profTop = plotTop + bandH + (showSummits ? 30 : 12);
+  const N = 360, pts = []; let lo = 1e9, hi = -1e9;
+  for (let i = 0; i <= N; i++) { const km = k0 + (k1 - k0) * i / N, e = elev(km); pts.push([km, e]); lo = Math.min(lo, e); hi = Math.max(hi, e); }
+  const span = Math.max(hi - lo, range && range <= 5 ? 40 : 150);
+  const floor = Math.min(28, (bottom - profTop) * 0.15);   // the lowest point keeps some fill under it
+  const Y = e => bottom - floor - (e - lo) / span * (bottom - floor - profTop);
+  // fill + line, ahead and ridden, down to the tile's bottom
+  const area = (from, to) => { const p = new Path2D(); let first = true;
+    for (const [km, e] of pts) { if (km < from || km > to) continue; first ? p.moveTo(X(km), Y(e)) : p.lineTo(X(km), Y(e)); first = false; }
+    return p; };
+  const fillArea = (from, to, fill) => { const p = area(from, to); p.lineTo(X(Math.min(to, k1)), bottom + 2); p.lineTo(X(Math.max(from, k0)), bottom + 2); p.closePath(); ctx.fillStyle = fill; ctx.fill(p); };
+  if (style === 'detailed') {
+    const step = range ? Math.max(range / 60, 0.02) : 2;
+    for (let km = k0; km < k1; km += step) { const g = (elev(km + step) - elev(km)) / (step * 10);
+      const p = new Path2D(); p.moveTo(X(km), Y(elev(km))); p.lineTo(X(km + step), Y(elev(km + step))); p.lineTo(X(km + step), bottom + 2); p.lineTo(X(km), bottom + 2); p.closePath();
+      ctx.fillStyle = gradeCol(Math.max(0, g)); ctx.fill(p); ctx.strokeStyle = gradeCol(Math.max(0, g)); ctx.lineWidth = 0.8; ctx.stroke(p); }
+    if (YOU > k0) fillArea(k0, YOU, DARKM ? 'rgba(0,0,0,0.62)' : 'rgba(255,255,255,0.68)');
+    ctx.strokeStyle = INK; ctx.lineWidth = 2; ctx.stroke(area(k0, k1));
+  } else {
+    fillArea(Math.max(k0, YOU), k1, col.fill); ctx.strokeStyle = col.line; ctx.lineWidth = 3; ctx.stroke(area(Math.max(k0, YOU), k1));
+    if (YOU > k0) { fillArea(k0, YOU, RIDDEN.fill); ctx.strokeStyle = RIDDEN.line; ctx.lineWidth = 3; ctx.stroke(area(k0, YOU)); }
+  }
+  // timed section: a Karoo-yellow strip along the bottom edge
+  const [t0, t1] = TIMED;
+  if (t1 > k0 && t0 < k1) { const a = X(Math.max(t0, k0)), b = X(Math.min(t1, k1)); ctx.fillStyle = '#FFE900'; ctx.fillRect(a, bottom - 8, Math.max(4, b - a), 8);
+    ctx.fillStyle = '#000'; for (let x = a; x < b; x += 10) ctx.fillRect(x, bottom - 8, 5, 8); }
+  // columns: one row, bottoms aligned; a straight dashed line down to the graph
+  const rowBottom = plotTop + plusRow + tallest * (icon + 3) - icon / 2 - 3;
+  for (const cl of clusters) {
+    const items = pick(cl), x = cl.x;
+    ctx.strokeStyle = INK; ctx.lineWidth = 1.4; ctx.setLineDash([3, 3]); ctx.beginPath();
+    ctx.moveTo(x, rowBottom + icon / 2 + 2); ctx.lineTo(x, Y(elev(cl.km)) - 3); ctx.stroke(); ctx.setLineDash([]);
+    items.forEach((n, i) => { const y = rowBottom - i * (icon + 3);
+      if (n[0] === '+') txt(ctx, n, { x, y: y + icon / 2 - 2, size: icon * 0.5, weight: 600, align: 'center', cond: true });
+      else badge(ctx, n, x, y, icon); });
+    if (false) txt(ctx, cl.cut, { x, y: rowBottom - (items.length - 1) * (icon + 3) - icon / 2 - 6, size: 20, weight: 600, align: 'center', color: DARKM ? '#FF6B5E' : '#C62020', cond: true });
+  }
+  // summit heights, in the free band right above the graph, only where nothing else is
+  if (showSummits) { const taken = clusters.map(cl => [cl.x - icon / 2 - 4, cl.x + icon / 2 + 4]);
+    for (const [km, h] of SUMMITS) { if (km < k0 || km > k1) continue; const x = X(km), w = 30;
+      if (taken.some(([a, b]) => x + w / 2 > a && x - w / 2 < b)) continue;
+      txt(ctx, `${h}`, { x, y: profTop - 8, size: 18, weight: 500, align: 'center', color: MUTED, cond: true }); taken.push([x - w / 2 - 4, x + w / 2 + 4]); } }
+  // you: ▼ and a line, like BetterIntervals' "now" marker
+  if (YOU >= k0 && YOU <= k1) { const x = Math.max(X(YOU), L + 10), y = Y(elev(YOU));
+    ctx.fillStyle = INK; ctx.fillRect(x - 1, y, 2, bottom - y);
+    ctx.beginPath(); ctx.moveTo(x - 9, y - 16); ctx.lineTo(x + 9, y - 16); ctx.lineTo(x, y - 3); ctx.closePath(); ctx.fill(); }
+  // next stop beyond the range: top right, with how far
+  if (nextBeyond) { const s = 26, y = plotTop + 2 + s / 2;
+    const name = next.items.length > 2 ? 'feed' : next.items[0];
+    const w = txt(ctx, `${(next.km - YOU).toFixed(1)} km ›`, { x: R - 9, y: y + 8, size: 22, weight: 500, align: 'right', cond: true });
+    badge(ctx, name, R - 9 - w - 6 - s / 2, y, s); }
+}
+
+// ---------- The header's info (Settings › At the top): next cut / feed / water / toilet, as km or time ----------
+// Time comes from a speed for each grade: learned from this ride (bunch riding included), Mountaineer's
+// physics where nothing is learned yet. Here: 30 km/h on the flat, 280 W uphill, 43 km/h downhill.
+const CLOCK0 = 10 * 60 + 24;   // showcase: 10:24
+function speedAt(g) {
+  if (g < -2) return 12;  if (g < 1.5) return 8.3;
+  const m = 80, P = 280; let lo = 1, hi = 15;
+  for (let i = 0; i < 40; i++) { const v = (lo + hi) / 2, need = v * m * 9.81 * (g / 100 + 0.005) + 0.5 * 1.2 * 0.32 * v ** 3; need > P ? hi = v : lo = v; }
+  return lo;
+}
+function minutesTo(km) { NOISE = 0; let t = 0; for (let k = YOU; k < km; k += 0.2) { const g = (elev(k + 0.2) - elev(k)) / 2; t += 200 / speedAt(g); } return t / 60; }
+const hm = min => `${Math.floor(min / 60)}:${String(Math.round(min % 60)).padStart(2, '0')}`;
+function headInfo(ctx, r, hb, head, as) {
+  if (head === 'off') return;
+  const RED = DARKM ? '#FF6B5E' : '#C62020', GREEN = DARKM ? '#4CC777' : '#1E8E3E';
+  const want = { feed: 'food', water: 'water', toilet: 'restroom' }[head];
+  const st = STOPS.find(s => s.km > YOU && (head === 'cut' ? s.cut : s.items.includes(want)));
+  if (!st) return;
+  const narrow = r.w < 300, size = r.h >= 150 ? 23 : 20, x0 = r.x + 12 + 27 + 8;
+  const name = { cut: 'CUT', feed: 'FEED', water: 'WATER', toilet: 'TOILET' }[head];
+  const parts = [[(narrow ? '' : 'NEXT ') + name + ' ', INK, 500]];
+  const t = minutesTo(st.km), km = (st.km - YOU).toFixed(1);
+  if (head === 'cut') {
+    parts.push([st.cut, RED, 600]);
+    if (!narrow) { if (as === 'km') parts.push([` · ${km} KM`, INK, 500]);
+      else { const eta = CLOCK0 + t, [h, m] = st.cut.split(':').map(Number); parts.push([' · ETA ', INK, 500], [hm(eta), eta > h * 60 + m ? RED : GREEN, 600]); } }
+  } else parts.push(as === 'km' ? [`${km} KM`, INK, 600] : [`IN ${hm(t)}`, INK, 600]);
+  let x = x0; for (const [str, color, weight] of parts) x += txt(ctx, str, { x, y: hb, size, weight, cond: true, color });
+}
+
+// ---------- Map (drawn, Karoo style; no real map tiles) ----------
+const MP = { land:'#e6e3dd', green:'#bddba8', water:'#a7cfe3', road:'#ffffff', casing:'#cfcac1', label:'#55595d', halo:'#ffffff' };
+const YEL = '#FFFF00', RIDDEN_M = '#6E6A1C', MAP_TOP = 204;
+let c; let seed = 5; const rnd = () => { seed = Math.sin(seed) * 10000; return seed - Math.floor(seed); };
+function spline(p, n = 14) { const o = []; for (let i = 0; i < p.length - 1; i++) { const p0 = p[i-1] || p[i], p1 = p[i], p2 = p[i+1], p3 = p[i+2] || p2;
+  for (let t = 0; t < n; t++) { const s = t / n, s2 = s * s, s3 = s2 * s; o.push([0, 1].map(k => .5 * ((2*p1[k]) + (-p0[k]+p2[k])*s + (2*p0[k]-5*p1[k]+4*p2[k]-p3[k])*s2 + (-p0[k]+3*p1[k]-3*p2[k]+p3[k])*s3))); } }
+  o.push(p[p.length - 1]); return o; }
+function stroke(pts, w, col, join = 'round', cap = 'round', dash = []) { c.beginPath(); pts.forEach(([x, y], i) => i ? c.lineTo(x, y) : c.moveTo(x, y)); c.lineWidth = w; c.strokeStyle = col; c.lineJoin = join; c.lineCap = cap; c.setLineDash(dash); c.stroke(); c.setLineDash([]); }
+function along(pts, step, start, f) { let d = start; for (let i = 1; i < pts.length; i++) { const [x0, y0] = pts[i-1], [x1, y1] = pts[i]; const L = Math.hypot(x1-x0, y1-y0), a = Math.atan2(y1-y0, x1-x0); while (d < L) { f(x0+(x1-x0)*d/L, y0+(y1-y0)*d/L, a); d += step; } d -= L; } }
+function blob(cx, cy, rx, ry, fill, n = 10) { const q = []; for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2, k = .8 + rnd() * .35; q.push([cx + Math.cos(a)*rx*k, cy + Math.sin(a)*ry*k]); }
+  c.beginPath(); q.forEach(([x, y], i) => { const [nx, ny] = q[(i+1) % n]; const mx = (x+nx)/2, my = (y+ny)/2; i ? c.quadraticCurveTo(x, y, mx, my) : c.moveTo(mx, my); }); c.closePath(); c.fillStyle = fill; c.fill(); }
+function road(pts, w) { stroke(pts, w + 2, MP.casing); stroke(pts, w, MP.road); }
+function label(t, x, y, size = 15, it = true) { c.font = `${it ? 'italic ' : ''}500 ${size}px Plex`; c.lineWidth = 4; c.lineJoin = 'round'; c.strokeStyle = MP.halo; c.strokeText(t, x, y); c.fillStyle = MP.label; c.fillText(t, x, y); }
+function bigChev(x, y, a) { c.save(); c.translate(x, y); c.rotate(a); c.beginPath(); c.moveTo(-7, -13); c.lineTo(6, 0); c.lineTo(-7, 13); c.lineJoin = 'round'; c.lineCap = 'round'; c.lineWidth = 13; c.strokeStyle = '#111'; c.stroke(); c.lineWidth = 8.5; c.strokeStyle = YEL; c.stroke(); c.restore(); }
+function me(x, y, a) { c.save(); c.translate(x, y); c.rotate(a + Math.PI / 2); const h = 56; c.beginPath(); c.moveTo(0, -h*.55); c.lineTo(h*.5, h*.45); c.lineTo(0, h*.28); c.lineTo(-h*.5, h*.45); c.closePath(); c.lineJoin = 'round'; c.lineWidth = 6; c.strokeStyle = '#111'; c.stroke(); c.fillStyle = YEL; c.fill(); c.restore(); }
+function nearest(pts, at) { let b = 0, bd = 1e9; pts.forEach(([x, y], i) => { const d = Math.hypot(x-at[0], y-at[1]); if (d < bd) { bd = d; b = i; } }); return b; }
+function dirAt(pts, i) { const [x0, y0] = pts[Math.max(0, i-3)], [x1, y1] = pts[Math.min(pts.length-1, i+3)]; return Math.atan2(y1-y0, x1-x0); }
+// The Karoo's own POI pin (ic_poi_layer_base: #484848 teardrop, white glyph), drawn by the Karoo
+const PIN = new Path2D('M63.48,84.34C80.02,79.05 92,63.5 92,45.14C92,22.42 73.64,4 51,4C28.36,4 10,22.42 10,45.14C10,63.5 21.98,79.05 38.52,84.34L51,100L63.48,84.34Z');
+function karooPin(x, y, glyph, w = 104) { const k = w / 104; c.save(); c.translate(x - 51 * k, y - 100 * k); c.scale(k, k); c.fillStyle = '#484848'; c.fill(PIN); c.restore();
+  const s = w * 0.64; c.drawImage(GLYPH_IMG['w:' + glyph], x - s / 2, y - 55 * k - s / 2, s, s); return { cx: x, cy: y - 55 * k, r: 41 * k }; }
+function pinBadge(p, name) { const s = 44, x = p.cx + p.r * 0.72, y = p.cy - p.r * 0.72;
+  c.beginPath(); c.arc(x, y, s / 2 + 2.5, 0, 7); c.fillStyle = '#FFFFFF'; c.fill(); badge(c, name, x, y, s); }
+function mapPage(ctx, I) {
+  c = ctx; seed = 5; c.fillStyle = MP.land; c.fillRect(0, 0, 480, 800);
+  blob(80, 300, 90, 70, MP.green); blob(390, 720, 100, 60, MP.green); blob(420, 330, 70, 50, MP.water, 11);
+  [[[0, 700], [140, 660], [300, 640], [480, 600]], [[300, 640], [340, 740], [330, 820]], [[160, 420], [100, 330], [20, 260]], [[480, 470], [380, 440], [300, 400]]].forEach(p => road(spline(p), 5));
+  const route = spline([[250, 880], [240, 760], [230, 650], [205, 560], [230, 470], [300, 410], [270, 330], [190, 300], [150, 220], [170, 120], [130, -40]]);
+  road(route, 6);
+  label('Puig Major', 300, 268); label('Embassament de Cúber', 300, 380, 14); label('Sóller', 40, 250);
+  const at = [236, 700], k = nearest(route, at), ridden = route.slice(0, k + 1), ahead = route.slice(k);
+  stroke(ridden, 18, '#111', 'miter'); stroke(ridden, 12, RIDDEN_M, 'miter'); stroke(ahead, 18, '#111', 'miter'); stroke(ahead, 12, YEL, 'miter');
+  // timed section: black dashes on the route between the timing pins (ours)
+  const iStart = nearest(route, [205, 560]), iEnd = nearest(route, [278, 352]);
+  stroke(route.slice(iStart, iEnd + 1), 6, '#111', 'round', 'butt', [12, 12]);
+  along(ahead.slice(0, nearest(ahead, [205, 560])), 90, 50, bigChev); me(route[k][0], route[k][1], dirAt(route, k));
+  // the Karoo's own pins (route POIs) with our corner badges
+  const pStart = karooPin(205, 560, 'control'); pinBadge(pStart, 'timing_start');
+  const pEnd = karooPin(278, 352, 'control'); pinBadge(pEnd, 'timing_end');
+  karooPin(212, 302, 'aid_station');
+  // compass + scale like the Karoo
+  c.beginPath(); c.arc(420, 290, 44, 0, 7); c.fillStyle = '#111'; c.fill(); c.lineWidth = 3.5; c.strokeStyle = '#fff'; c.stroke();
+  c.beginPath(); c.moveTo(420, 260); c.lineTo(431, 290); c.lineTo(409, 290); c.closePath(); c.fillStyle = '#E8453C'; c.fill();
+  c.beginPath(); c.moveTo(420, 320); c.lineTo(431, 290); c.lineTo(409, 290); c.closePath(); c.fillStyle = '#E9E9E9'; c.fill();
+  c.drawImage(I['fields_' + THEME], 0, 0, 480, MAP_TOP, 0, 0, 480, MAP_TOP);
+}
+
+// ---------- A new settings piece (would go into the kit, SettingsKit.kt, first): a list you drag to reorder ----------
+function rankList(rows) { return { h: rows.length * 76 + 8, draw(c, y) { rows.forEach(([ic, name], i) => { const ry = y + 4 + i * 76;
+  c.fillStyle = C.listCard; c.beginPath(); c.roundRect(X0, ry, XW, 68, 20); c.fill();
+  c.fillStyle = C.help; c.font = F(500, 13 * D); c.fillText(String(i + 1), X0 + 20, ry + 44);
+  c.drawImage(GLYPH_IMG['b:' + ic], X0 + 52, ry + 12, 44, 44);
+  c.fillStyle = C.text; c.font = F(400, 16 * D); c.fillText(name, X0 + 112, ry + 45);
+  c.fillStyle = C.help; for (let k = 0; k < 3; k++) c.fillRect(XR - 56, ry + 24 + k * 9, 32, 3.5); }); } }; }
+
+// ---------- Settings heading icons not in the kit yet (would go into karoo-common as ic_settings_*) ----------
+const kitGlyph = name => (ctx, x, y, s) => ctx.drawImage(GLYPH_IMG['k:' + name], x, y, s, s);
+Object.assign(DRAWN, { header: kitGlyph('cutoff'), as: kitGlyph('timed'), size: kitGlyph('food'), prio: (ctx, x, y, s) => { ctx.fillStyle = C.text; [0, 1, 2].forEach(k => ctx.fillRect(x + 2 + k * 3, y + 6 + k * 13, s - 4 - k * 6, 5)); }, food: kitGlyph('food'), restroom: kitGlyph('restroom'), mechanic: kitGlyph('mechanic'), timing: kitGlyph('timed'),
+  cutoff: kitGlyph('cutoff'), summit: kitGlyph('summit'), generic: kitGlyph('viewpoint'), section: kitGlyph('timing_start'),
+  graph: (ctx, x, y, s) => kg(ctx, 'GRADE', x - 2, y - 2, s + 4, C.text),
+  range: (ctx, x, y, s) => kg(ctx, 'DISTANCE', x - 2, y - 2, s + 4, C.text),
+  remote: (ctx, x, y, s) => { ctx.strokeStyle = C.text; ctx.lineWidth = 2.6; ctx.beginPath(); ctx.roundRect(x + s * .2, y + s * .04, s * .6, s * .92, 8); ctx.stroke();
+    ctx.fillStyle = C.text; ctx.beginPath(); ctx.arc(x + s / 2, y + s * .32, s * .12, 0, 7); ctx.fill(); ctx.beginPath(); ctx.arc(x + s / 2, y + s * .64, s * .12, 0, 7); ctx.fill(); } });
+
+(async () => {
+  await Promise.all([400, 500, 600, 700].map(w => document.fonts.load(`${w} 20px Plex`))); await document.fonts.load('italic 500 15px Plex');
+  const I = {}; for (const k of Object.keys(IMGS)) I[k] = await loadImg(IMGS[k]);
+  await loadGlyphs();
+  const dev = await KarooDevice.load({ frame: FRAME_PNG, screen: IMGS.status });
+  const put = (id, draw, { animate = 0 } = {}) => { if (SHOT && id !== SHOT) return;
+    const t = FRAMES > 1 ? FRAME / (FRAMES - 1) : 0;
+    if (!SHOT && animate) { const host = document.getElementById(id); let k = 0;
+      const tick = () => { host.replaceChildren(dev.device(dev.screen({ draw: c => draw(c, (k % animate) / (animate - 1)) }), W)); k++; };
+      tick(); setInterval(tick, 1100); return; }
+    const cv = dev.device(dev.screen({ draw: c => draw(c, t) }), W);
+    if (SHOT) { document.body.innerHTML = ''; document.body.style.cssText = `margin:0;background:${BACKDROP};width:1300px;height:2000px;display:flex;align-items:center;justify-content:center`;
+      cv.style.width = '1100px'; document.body.append(cv); } else document.getElementById(id).append(cv); };
+
+  const full = o => ctx => ridePage(ctx, [{ x: 1, y: 79, w: 478, h: 721, fn: (cx, r) => upahead(cx, r, o) }]);
+  const half = o => ctx => ridePage(ctx, [{ x: 1, y: rowY(0), w: 478, h: 2 * ROW + TGAP, fn: (cx, r) => upahead(cx, r, o) },
+    { x: COL[0], y: rowY(2), w: CW, h: ROW }, { x: COL[1], y: rowY(2), w: CW, h: ROW }, { x: COL[0], y: rowY(3), w: CW, h: ROW }, { x: COL[1], y: rowY(3), w: CW, h: ROW }]);
+  put('full-simple', full({ style: 'simple' }));
+  put('full-detailed', full({ style: 'detailed' }));
+  put('full-yellow', full({ style: 'simple', colour: 'yellow' }));
+  put('full-purple', full({ style: 'simple', colour: 'purple' }));
+  put('half-yellow', half({ style: 'simple', colour: 'yellow' }));
+  put('half-purple', half({ style: 'simple', colour: 'purple' }));
+  put('half', half({ style: 'simple' }));
+  put('full-large', full({ style: 'simple', size: 'large' }));
+  put('half-large', half({ style: 'simple', size: 'large' }));
+  put('half-large-water', half({ style: 'simple', size: 'large', prio: ['water', 'food', 'toilets', 'timing', 'cutoff', 'mechanic'] }));
+  put('small', ctx => ridePage(ctx, [{ x: 1, y: rowY(0), w: 478, h: ROW, fn: (cx, r) => upahead(cx, r, { range: 50 }) },
+    { x: COL[0], y: rowY(1), w: CW, h: ROW, fn: (cx, r) => upahead(cx, r, { range: 50 }) }, { x: COL[1], y: rowY(1), w: CW, h: ROW },
+    { x: COL[0], y: rowY(2), w: CW, h: ROW }, { x: COL[1], y: rowY(2), w: CW, h: ROW }, { x: COL[0], y: rowY(3), w: CW, h: ROW }, { x: COL[1], y: rowY(3), w: CW, h: ROW }]));
+  const RANGES = [0, 100, 50, 10, 5, 1];
+  put('ranges', (ctx, t) => half({ range: RANGES[Math.round(t * (RANGES.length - 1))], style: 'simple' })(ctx), { animate: RANGES.length });
+  put('range-100', half({ range: 100 }));
+  put('range-50', half({ range: 50 }));
+  put('range-10', half({ range: 10 }));
+  put('range-5', half({ range: 5, style: 'detailed' }));
+  put('range-1', half({ range: 1, style: 'detailed' }));
+  put('map', ctx => mapPage(ctx, I));
+  put('head-cut-km', half({ head: 'cut', as: 'km' }));
+  put('head-cut-time', half({ head: 'cut', as: 'time' }));
+  put('head-feed-km', half({ head: 'feed', as: 'km' }));
+  put('head-feed-time', half({ head: 'feed', as: 'time' }));
+  put('head-toilet-km', half({ head: 'toilet', as: 'km', range: 50 }));
+
+  // Example card: the half-page field as the settings make it
+  const ex = document.createElement('canvas'); ex.width = 478; ex.height = 348;
+  const exc = ex.getContext('2d'); exc.fillStyle = '#FFF'; exc.fillRect(0, 0, 478, 348); upahead(exc, { x: 0, y: 0, w: 478, h: 348 }, { style: 'simple' });
+  const card = { img: ex, w: Math.round(206 * 478 / 348), h: 206 };
+  const form = layout([
+    heading('graph', 'Graph'), seg(['Simple', 'Detailed'], 0), help('Simple: one colour, like the Karoo\'s own elevation graph. Detailed: the slope coloured by grade, in the Karoo\'s climb colours.'), divider,
+    heading('header', 'At the top'), seg(['Cut', 'Feed', 'Water', 'Toilet', 'Off'], 0), help('The next cut-off, feed stop, water or toilet, next to the field\'s icon.'),
+    heading('as', 'Show as'), seg(['Distance', 'Time'], 0), help('Time: when you reach a cut-off (green before it, red after), or how long to the next stop. From your own speed on this ride, in a bunch too.'), divider,
+    heading('size', 'Icon size'), seg(['Small', 'Large'], 0), help('Large is easier to read on the bike; when a stop has more icons than fit, the rest show as +2.'), divider,
+    heading('prio', 'Priority'), rankList([['timed', 'Timing'], ['cutoff', 'Cut-offs'], ['food', 'Food'], ['water', 'Water'], ['restroom', 'Toilets'], ['mechanic', 'Mechanic, medical']]),
+    help('Drag to reorder. When a stop has too many icons, the top ones show nearest the graph.'), divider,
+    heading('range', 'Start with'), seg(['Route', '100', '50', '10', '5', '1 km'], 0), help('Tap the field to see the next 100, 50, 10, 5 or 1 km, and once more for the whole route.'), divider,
+    infoRow('remote', 'Or use a remote button: Karoo Settings › Controllers › UpAhead: next range.'), divider,
+    heading('graph', 'On the graph'), space(4),
+    switchRow('food', 'Food and water', true), switchRow('restroom', 'Toilets', true), switchRow('mechanic', 'Mechanic, medical', true),
+    switchRow('timing', 'Timing', true), switchRow('cutoff', 'Cut-offs', true), switchRow('summit', 'Summit heights', true), switchRow('generic', 'Other POIs', false),
+    help('Timing and cut-offs come from the POI names, e.g. "Timing start" or "Cut-off 16:40".'), divider,
+    heading('section', 'On the map'), space(4),
+    switchRow('timing', 'Timed sections', true), switchRow('cutoff', 'Badges on pins', true),
+    help('The Karoo shows the route\'s POIs on the map itself; these add what it can\'t show.'), divider,
+    switchRow('update', 'Update notices', true), help('A card on the Karoo when an update is out.'), divider,
+    textRow('info', 'UpAhead 0.1.0', 'github.com/Dubadai/karoo-upahead'), space(16),
+  ]);
+  put('settings-top', ctx => page(ctx, { title: 'UpAhead', card, form }));
+  put('settings-mid', ctx => page(ctx, { title: 'UpAhead', card, form, scrollTo: 4 }));
+  put('settings-prio', ctx => page(ctx, { title: 'UpAhead', card, form, scrollTo: 11 }));
+  put('settings-end', ctx => page(ctx, { title: 'UpAhead', card, form, scrollTo: 'end' }));
+})();
+</script>
+</body>
+</html>

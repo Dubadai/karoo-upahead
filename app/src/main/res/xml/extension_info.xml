@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ExtensionInfo
+    displayName="@string/extension_name"
+    icon="@drawable/ic_app"
+    id="upahead"
+    scansDevices="false">
+
+    <DataType
+        description="@string/field_description"
+        displayName="@string/field_name"
+        graphical="true"
+        icon="@drawable/ic_app"
+        typeId="upahead" />
+
+    <!-- Karoo Settings › Controllers: a remote button for the next range (taps on fields can get lost) -->
+    <BonusAction
+        actionId="range"
+        displayName="@string/action_range" />
+</ExtensionInfo>

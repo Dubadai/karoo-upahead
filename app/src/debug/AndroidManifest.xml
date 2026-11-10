@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Debug builds only: lets adb fake a remote button press for testing. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <receiver
+            android:name=".DebugRemoteReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.daviddokakis.upahead.DEBUG_REMOTE" />
+            </intent-filter>
+        </receiver>
+        <!-- Field gallery: the field at every Karoo size, light and dark (design-assets/tools/field-gallery) -->
+        <activity
+            android:name=".FieldGalleryActivity"
+            android:exported="true"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+        <!-- Every icon at the field's real sizes, light and dark, on the Karoo's screen -->
+        <activity
+            android:name=".IconTestActivity"
+            android:exported="true"
+            android:label="UpAhead icons" />
+    </application>
+</manifest>

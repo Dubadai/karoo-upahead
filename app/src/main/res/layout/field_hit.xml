@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One tap area over a stop's icons, or over the open info box (placed with margins in field_root's [poi]). -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/hit"
+    android:layout_width="10px"
+    android:layout_height="10px" />
