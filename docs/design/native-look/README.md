@@ -19,4 +19,6 @@ emulator (`gallery.sh`, branch `native-look`), now vs fixed, light and dark: `mo
 - **Quarter-tile stop card:** cut off at the bottom, but only in the gallery: the card opens on the tapped field,
   and quarter, row and small tiles take no taps on stops. Not changed.
 
-Pictures: `images/now-*` and `images/fixed-*` (light and dark). Awaiting the OK.
+Device: `01-device-settings-example-light.png`, the Settings Example card on our test Karoo (build 2e8ce30).
+
+Pictures: `images/now-*` and `images/fixed-*` (light and dark). Picked and built 2026-11-11.
