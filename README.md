@@ -9,8 +9,8 @@ A Hammerhead Karoo 3 data field that shows the route ahead as an elevation graph
 own Upcoming Elevation, with every stop on it: feed stations with what they have (food, water, toilets,
 mechanic), timing starts and ends, and the next cut-off. Made for gran fondos and long event rides.
 
-<img src="docs/images/upahead-light.jpg" alt="UpAhead on three Karoo 3s: the whole route with its stops above the graph, a feed stop's card (food, water, toilet, cut-off 13:30 with 1:06 to spare), and off route with the way back in red and REJOIN IN 2.4 KM">
-<img src="docs/images/upahead-dark.jpg" alt="The same three screens in dark mode">
+<img src="docs/images/upahead-light.jpg" alt="UpAhead on four Karoo 3s: the whole route with its stops above the graph (COMING UP IN 3.4 KM, a water stop), NEXT FEED IN 1:20 H on a half page, a feed stop's card (food, water, toilet, cut-off 13:30 with 1:06 to spare), and a one-row tile with bare stop icons">
+<img src="docs/images/upahead-dark.jpg" alt="The same four screens in dark mode">
 
 - **Every stop on the graph:** the route's POIs as icons above the elevation graph, one column per stop, the most important ones first (your order).
 - **Tap like the Karoo's own graph:** tap to zoom out, double-tap to zoom in, through 2, 5, 10, 25, 50, 80, 150 and 300 km and the whole route. A remote button works too.
