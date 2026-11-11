@@ -75,28 +75,26 @@ class ProfileRenderer(private val context: Context) {
         // Icons in the header are as tall as the capitals and stand on the baseline, like the Karoo's own
         // The range on its own, no eye in front (too heavy; 2026-11-10)
         val rangeW = label.measureText(rangeText)
-        val withRange = if (rangeText.isEmpty()) rangeRight - infoLeft else rangeRight - rangeW - 12 - infoLeft
         val alone = rangeRight - infoLeft
         val wayLen = s.wayBack?.takeIf { s.offRoute }?.lastOrNull()?.first
-        val options = if (route != null && wayLen == null && s.offRoute) listOf(listOf("OFF ROUTE" to col.red))
-            else if (route != null && wayLen != null) listOf(listOf("REJOIN IN ${fmt(wayLen * u)} $unit" to col.red), listOf("REJOIN IN ${fmt(wayLen * u)}" to col.red), listOf("REJOIN ${fmt(wayLen * u)}" to col.red))
+        val options = if (route != null && wayLen == null && s.offRoute) listOf(Head(listOf("OFF ROUTE" to col.red)))
+            else if (route != null && wayLen != null) listOf("REJOIN IN ${fmt(wayLen * u)} $unit", "REJOIN IN ${fmt(wayLen * u)}", "REJOIN ${fmt(wayLen * u)}").map { Head(listOf(it to col.red)) }
             else if (route != null && s.alongKm != null) headInfo(route, s, p, w < 300, col, u, unit) else emptyList()
         // A stop's icon in the header ("@KIND") is drawn bare, in the text colour, no square behind it
         val partW = { t: String -> if (t.startsWith("@")) headGlyphWidth(Kind.valueOf(t.drop(1)), caps.toFloat()) + 6 else label.measureText(t) }
         val width = { l: List<Pair<String, Int>> -> l.sumOf { partW(it.first).toDouble() }.toFloat() }
-        val info = options.firstOrNull { width(it) <= withRange }
-        val infoAlone = if (info == null) options.firstOrNull { width(it) <= alone } else null
-        if (infoAlone == null) {
-            c.drawText(rangeText, rangeRight, base, label)
-        }
-        (info ?: infoAlone)?.let { list ->
+        // The title on the left, "icon IN distance" on the right (mock, 2026-11-11); the longest that fits, then shorter
+        val head = options.firstOrNull { o -> val lw = width(o.left); val rw = width(o.right); lw + rw + (if (lw > 0 && rw > 0) 16 else 0) <= alone }
+        if (options.isEmpty()) c.drawText(rangeText, rangeRight, base, label)
+        val drawParts = { list: List<Pair<String, Int>>, x0: Float ->
             val lp = Paint(label).apply { textAlign = Paint.Align.LEFT }
-            var x = infoLeft
+            var x = x0
             for ((t, color) in list) {
                 if (t.startsWith("@")) { val k = Kind.valueOf(t.drop(1)); headGlyph(c, k, x, base, caps.toFloat(), col.ink); x += headGlyphWidth(k, caps.toFloat()) + 6; continue }
                 lp.color = color; c.drawText(t, x, base, lp); x += lp.measureText(t)
             }
         }
+        head?.let { drawParts(it.left, infoLeft); drawParts(it.right, rangeRight - width(it.right)) }
 
         if (route == null || route.elevation.size < 2) {
             val text = if (route == null) "NO ROUTE" else "NO ELEVATION"
@@ -533,63 +531,59 @@ class ProfileRenderer(private val context: Context) {
      * (with its icon), the next cut-off, feed, water, toilet, mechanic, summit or timing, or the finish; as
      * distance or time. Longest first, then shorter: without "NEXT", without the unit, the first parts.
      */
-    private fun headInfo(route: RouteModel, s: UpAheadState, p: Prefs, narrow: Boolean, col: Colours, u: Double, unit: String): List<List<Pair<String, Int>>> {
+    /** The header: a title on the left, "icon IN distance" on the right (mock, 2026-11-11). */
+    private class Head(val left: List<Pair<String, Int>>, val right: List<Pair<String, Int>> = emptyList())
+
+    /** A time in the header says it's a time (picked A, 2026-11-11): "1:20 H", under an hour "25 MIN". */
+    private fun headTime(sec: Double): String {
+        val m = (sec / 60).roundToInt()
+        return if (m < 60) "$m MIN" else String.format(java.util.Locale.US, "%d:%02d H", m / 60, m % 60)
+    }
+
+    /**
+     * The header (feedback, 2026-11-11): on the left the icon and words ending in "IN" ("NEXT FEED IN"), on the right the
+     * value with its unit ("11.9 KM", "1:20 H"), so it reads as one sentence and every number says what it is. Small
+     * tiles: the icon and "IN" on the left, the value on the right. Shorter: fewer words on the left, never a bare number.
+     */
+    private fun headInfo(route: RouteModel, s: UpAheadState, p: Prefs, narrow: Boolean, col: Colours, u: Double, unit: String): List<Head> {
         if (p.head == HeadInfo.OFF) return emptyList()
         val along = s.alongKm ?: return emptyList()
+        val ink = { t: String -> t to col.ink }
+        val eta = s.headEtaSec
+        val value = { km: Double, time: Boolean -> if (time && eta != null) headTime(eta) else "${fmt((km - along) * u)} $unit" }
+        // Small tiles: the closest stop whatever Settings › At the top says (2026-11-10), the finish once none is left
+        if (narrow) {
+            val next = UpAheadSession.headTarget(route, along, HeadInfo.NEXT, p) ?: return emptyList()
+            val k = next.kinds.filter { p.shows(it.group) }.minByOrNull { p.rank(it.group) } ?: Kind.FINISH
+            val v = value(next.km, p.headAs == HeadAs.TIME && p.head == HeadInfo.NEXT)
+            return listOf(Head(listOf(ink("@${k.name}"), ink("IN")), listOf(ink(v))), Head(listOf(ink("@${k.name}")), listOf(ink(v))))
+        }
         val st = UpAheadSession.headTarget(route, along, p.head, p) ?: return emptyList()
         // Nothing of that kind left: the target is the finish (headTarget falls back to it)
         val head = if (st.kinds.isEmpty() && st.km >= route.totalKm - 1e-6) HeadInfo.FINISH else p.head
-        val dist = "${fmt((st.km - along) * u)} $unit"
-        val eta = s.headEtaSec
-        val timeOrDist = if (p.headAs == HeadAs.TIME && eta != null) "IN ${duration(eta)}" else dist
-        // Small tiles: only the icon and the distance (time), no words (feedback, 2026-11-10); a stop with several
-        // things shows the one highest in the priority list
-        if (narrow) {
-            // Small tiles: always the closest stop, whatever Settings › At the top says (feedback, 2026-11-10: "if water
-            // is closest, show just that"); the finish once no stop is left
-            val next = UpAheadSession.headTarget(route, along, HeadInfo.NEXT, p) ?: return emptyList()
-            val k = next.kinds.filter { p.shows(it.group) }.minByOrNull { p.rank(it.group) } ?: Kind.FINISH
-            val d = "${fmt((next.km - along) * u)} $unit"
-            val v = if (p.headAs == HeadAs.TIME && eta != null && p.head == HeadInfo.NEXT) "IN ${duration(eta)}" else d
-            val one = listOf("@${k.name}" to col.ink, v to col.ink)
-            return listOf(one, one.map { (t, c) -> t.removeSuffix(" $unit") to c }).distinct()
+        val time = p.headAs == HeadAs.TIME
+        val v = value(st.km, time)
+        // the icon, then the words from longest to shortest, each ending in "IN"
+        val (kind, words) = when (head) {
+            HeadInfo.NEXT -> (st.kinds.filter { p.shows(it.group) }.minByOrNull { p.rank(it.group) } ?: return emptyList()) to listOf("COMING UP IN", "NEXT IN", "IN")
+            HeadInfo.CUT -> Kind.CUTOFF to listOf("NEXT CUT-OFF IN", "CUT-OFF IN", "IN")
+            HeadInfo.SUMMIT -> Kind.SUMMIT to listOf("NEXT SUMMIT IN", "SUMMIT IN", "IN")
+            HeadInfo.FINISH -> Kind.FINISH to listOf("FINISH IN", "IN")
+            HeadInfo.FEED -> Kind.FEED to listOf("NEXT FEED IN", "FEED IN", "IN")
+            HeadInfo.WATER -> Kind.WATER to listOf("NEXT WATER IN", "WATER IN", "IN")
+            HeadInfo.TOILET -> Kind.TOILET to listOf("NEXT TOILET IN", "TOILET IN", "IN")
+            HeadInfo.MECHANIC -> Kind.MECHANIC to listOf("NEXT MECHANIC IN", "MECHANIC IN", "IN")
+            else -> (st.kinds.firstOrNull { it.group == Group.TIMING } ?: Kind.TIMING_START) to listOf("NEXT TIMING IN", "TIMING IN", "IN")
         }
-        val parts = mutableListOf<Pair<String, Int>>()
-        when (head) {
-            HeadInfo.NEXT -> {
-                val k = st.kinds.filter { p.shows(it.group) }.minByOrNull { p.rank(it.group) } ?: return emptyList()
-                parts += "NEXT " to col.ink; parts += "@${k.name}" to col.ink; parts += timeOrDist to col.ink
-            }
-            HeadInfo.CUT -> {
-                val cut = st.cut
-                parts += "NEXT CUT " to col.ink
-                if (cut.isNullOrEmpty()) parts += timeOrDist to col.red   // a cut-off whose time isn't in its name
-                else {
-                    parts += cut to col.red
-                    if (p.headAs == HeadAs.DISTANCE) parts += " · $dist" to col.ink
-                    else if (eta != null && s.clockMin != null) {
-                        val arrive = s.clockMin + (eta / 60).roundToInt()
-                        val (ch, cm) = cut.split(":").map { it.toInt() }
-                        parts += " · ETA " to col.ink
-                        parts += clock(arrive) to if (arrive > ch * 60 + cm) col.red else col.green
-                    }
-                }
-            }
-            HeadInfo.SUMMIT -> {
-                val e = route.elevAt(st.km)
-                parts += "NEXT SUMMIT " to col.ink; parts += timeOrDist to col.ink
-                parts += " · ${if (s.imperial) (e * M_TO_FT).roundToInt() else e.roundToInt()} ${if (s.imperial) "FT" else "M"}" to col.ink
-            }
-            HeadInfo.FINISH -> { parts += "FINISH " to col.ink; parts += timeOrDist to col.ink }
-            else -> {
-                val name = when (head) { HeadInfo.FEED -> "FEED"; HeadInfo.WATER -> "WATER"; HeadInfo.TOILET -> "TOILET"; HeadInfo.MECHANIC -> "MECHANIC"; else -> "TIMING" }
-                parts += "NEXT $name " to col.ink; parts += timeOrDist to col.ink
-            }
+        // A cut-off as time: how much time to spare (or how late) at the pace so far, like the stop card
+        val cut = st.cut
+        if (head == HeadInfo.CUT && time && !cut.isNullOrEmpty() && eta != null && s.clockMin != null) {
+            val (ch, cm) = cut.split(":").map { it.toInt() }
+            val late = s.clockMin + (eta / 60).roundToInt() - (ch * 60 + cm)
+            val r = if (late > 0) listOf("LATE ${headTime(late * 60.0)}" to col.red) else listOf("${headTime(-late * 60.0)} SPARE" to col.green)
+            return listOf(Head(listOf(ink("@CUTOFF"), ink("CUT-OFF $cut")), r), Head(listOf(ink("@CUTOFF"), ink(cut)), r), Head(listOf(ink("@CUTOFF")), r))
         }
-        val noNext = parts.mapIndexedNotNull { i, (t, c) -> if (i == 0) t.removePrefix("NEXT ").takeIf { it.isNotEmpty() }?.let { it to c } else t to c }
-        val noUnit = noNext.map { (t, c) -> t.removeSuffix(" $unit") to c }
-        val first = noUnit.take(2)
-        return listOf(parts, noNext, noUnit, first).distinct()
+        return words.map { Head(listOf(ink("@${kind.name}"), ink(it)), listOf(ink(v))) } + Head(listOf(ink("@${kind.name}")), listOf(ink(v)))
     }
 
     /** One badge on its own, [px] square (Settings › Priority). */

@@ -1,5 +1,43 @@
 # karoo-common changelog
 
+## 1.8.2 (2026-11-11)
+
+- A divider right under a switch row keeps 12 dp above itself, so the last switch of a list doesn't
+  sit on the line (help used to give that room before it moved above the choices). Also the line
+  before the last rows (`settingsAppRows`). Apps can drop their own spacers there (UpAhead's report).
+
+## 1.8.1 (2026-11-11)
+
+Our rule: an icon always sits next to its title (the first line), never in the middle of a title +
+lines block.
+
+- Version row (last row of every page): the info icon next to the app's name.
+- `settingsNavRow` with a status line: the icon next to the title; the arrow stays in the middle.
+- `settingsInfoRow`: the icon next to the note's first line when it wraps.
+- `settingsListCard`: the leading swatch or picture next to the name when there are status lines.
+
+## 1.8.0 (2026-11-11)
+
+Our rule from today: what a setting does goes right under its heading, before its choices, never
+under them (mock: `docs/design/help-first`).
+
+- `settingsIntro(text)`: that line, no gap above, 12 dp below. `settingsHelp` stays for other notes.
+- `settingsSegmented` has 14 dp under it (its explanation now sits above it), like the choice cards' 12.
+- The kit's own last rows use it (update notices). Apps move each `settingsHelp` that explains a
+  setting to a `settingsIntro` right after its heading when they take this version.
+
+## 1.7.0 (2026-11-11)
+
+- `settingsChoiceCards(options: List<Triple<title, line?, value>>, selected, onPick)` (from UpAhead, our
+  pick): one choice from a longer list as cards, a title, an optional short line, a radio at the right;
+  the picked card with a 3 dp Apple-blue ring (#007AFF, night #0A84FF, colour `settings_select_blue`)
+  just outside it and a filled radio. With the green switch, the one exception to Karoo-native colours.
+- 12 dp under the last card, so it doesn't sit on the divider below.
+- `settingsChoiceList` now draws these cards (titles only), so apps calling it change look without code.
+- `SettingsLayout` lets the ring draw into the form's side margin (clipChildren / clipToPadding off).
+  A form inside its own ViewGroup needs both off on that group too.
+- Seen on the emulator: `docs/design/choice-cards/`. Mock piece: `choiceCards` in the mock kit.
+
 ## 1.6.2 (2026-11-11)
 
 No visual change. A comment in `SettingsKit.kt` named a person (the kit goes into public repos);

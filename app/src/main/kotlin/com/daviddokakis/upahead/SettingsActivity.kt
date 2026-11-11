@@ -55,30 +55,39 @@ class SettingsActivity : Activity() {
         fun add(vararg v: android.view.View) = v.forEach { form.addView(it) }
 
         add(settingsHeading(R.drawable.ic_poi_cutoff, "At the top"),
-            settingsChoiceList(listOf("Next stop (any)" to HeadInfo.NEXT, "Next cut-off" to HeadInfo.CUT, "Next feed" to HeadInfo.FEED,
-                "Next water" to HeadInfo.WATER, "Next toilet" to HeadInfo.TOILET, "Next mechanic" to HeadInfo.MECHANIC, "Next summit" to HeadInfo.SUMMIT,
-                "Next timing" to HeadInfo.TIMING, "Finish" to HeadInfo.FINISH, "Off" to HeadInfo.OFF), p.head) { v -> change { copy(head = v) } },
-            settingsHelp("What the header shows, next to the field's icon. Next stop: the next POI of any kind you show on the graph, with its icon."),
+            settingsIntro("What the header says. Next stop (any): the closest stop you show on the graph, with its icon, e.g. \"COMING UP IN 5.4 KM\". The others: the next one of that kind, e.g. \"NEXT FEED IN 11.9 KM\". Small tiles always show the closest stop."),
+            settingsChoiceCards(listOf(
+                Triple("Next stop (any)", "The closest stop on the graph", HeadInfo.NEXT),
+                Triple("Next cut-off", "Time to spare, or how late", HeadInfo.CUT),
+                Triple("Next feed", "The next stop with food", HeadInfo.FEED),
+                Triple("Next water", "The next stop with water", HeadInfo.WATER),
+                Triple("Next toilet", "The next toilet", HeadInfo.TOILET),
+                Triple("Next mechanic", "A mechanic or bike shop", HeadInfo.MECHANIC),
+                Triple("Next summit", "The top of the next climb", HeadInfo.SUMMIT),
+                Triple("Next timing", "The next timed section", HeadInfo.TIMING),
+                Triple("Finish", "The end of the route", HeadInfo.FINISH),
+                Triple("Off", "No text in the header", HeadInfo.OFF)), p.head) { v -> change { copy(head = v) } },
             settingsHeading(R.drawable.ic_settings_timer, "Show as"),
+            settingsIntro("Distance: how far it is. Time: how long until you get there at your speed on this ride, e.g. \"1:20 H\". For a cut-off: how much time you'll have to spare (green) or how late you'll be (red)."),
             settingsSegmented(listOf("Distance" to HeadAs.DISTANCE, "Time" to HeadAs.TIME), p.headAs) { v -> change { copy(headAs = v) } },
-            settingsHelp("Time: when you reach a cut-off (green before it, red after), or how long to the rest. From your own speed on this ride, in a bunch too."),
             settingsDivider())
 
         add(settingsHeading(R.drawable.ic_settings_look, "Icon size"),
+            settingsIntro("Large is easier to read on the bike. If a stop has more icons than fit, the rest show as +2."),
             settingsSegmented(listOf("Small" to IconSize.SMALL, "Large" to IconSize.LARGE), p.iconSize) { v -> change { copy(iconSize = v) } },
-            settingsHelp("Large is easier to read on the bike. When a stop has more icons than fit, the rest show as +2."),
             settingsHeading(R.drawable.ic_settings_priority, "Priority"),
+            settingsIntro("Drag to reorder. When not every stop fits on the graph, your top kinds are shown first. A stop with several things shows your top one nearest the graph and in the header."),
             settingsRankList(p.priority.map { g -> Triple(g, badgeView(GROUP_KIND.getValue(g)), GROUP_NAME.getValue(g)) }) { order -> change { copy(priority = order) } },
-            settingsHelp("Drag to reorder. When not every stop fits, the stops ahead with your top kinds are shown; in a column, the top ones sit nearest the graph."),
             settingsDivider())
 
         add(settingsHeading(R.drawable.ic_settings_distance, "Start with"),
-            settingsChoiceList(RANGES.map { r -> (if (r == 0) "Full route" else "$r km ahead") to r }, p.startRange) { v -> change { copy(startRange = v) } },
-            settingsHelp("Like the Karoo's own graph: tap the graph to zoom out, double-tap to zoom in, through 2, 5, 10, 25, 50, 80, 150, 300 km ahead and the full route. Tap a stop for its card."),
+            settingsIntro("How far ahead the graph starts. Like the Karoo's own graph: tap to zoom out, double-tap to zoom in, through 2, 5, 10, 25, 50, 80, 150, 300 km and the full route. On a half page or bigger, tap a stop for its card."),
             settingsInfoRow(R.drawable.ic_settings_info, "Or use a remote button: Karoo Settings › Controllers › UpAhead: next range."),
+            settingsChoiceCards(RANGES.map { r -> Triple(if (r == 0) "Full route" else "$r km ahead", null, r) }, p.startRange) { v -> change { copy(startRange = v) } },
             settingsDivider())
 
         add(settingsHeading(R.drawable.ic_settings_elevation, "On the graph"),
+            settingsIntro("Which stops the graph shows. Timing and cut-offs come from the POI names, e.g. \"Timing start\" or \"Cut-off 16:40\"; services too, e.g. \"Feed 2: food water wc mechanic\"."),
             settingsSwitchRow(R.drawable.ic_poi_food, "Food and water", p.showFood) { v -> change { copy(showFood = v) } },
             settingsSwitchRow(R.drawable.ic_poi_restroom, "Toilets", p.showToilets) { v -> change { copy(showToilets = v) } },
             settingsSwitchRow(R.drawable.ic_poi_mechanic, "Mechanic, medical", p.showMechanic) { v -> change { copy(showMechanic = v) } },
@@ -87,13 +96,12 @@ class SettingsActivity : Activity() {
             settingsSwitchRow(R.drawable.ic_poi_summit, "Summit heights", p.showSummits) { v -> change { copy(showSummits = v) } },
             settingsSwitchRow(R.drawable.ic_poi_viewpoint, "Other POIs", p.showOther) { v -> change { copy(showOther = v) } },
             settingsSwitchRow(R.drawable.ic_settings_flag, "Hide passed stops", p.hidePassed) { v -> change { copy(hidePassed = v) } },
-            settingsHelp("Timing and cut-offs come from the POI names, e.g. \"Timing start\" or \"Cut-off 16:40\"; services too, e.g. \"Feed 2: food water wc mechanic\"."),
             settingsDivider())
 
         add(settingsHeading(R.drawable.ic_settings_marker, "On the map"),
+            settingsIntro("What UpAhead adds to the Karoo's map. The Karoo shows the route's POIs itself; these add what it can't show."),
             settingsSwitchRow(R.drawable.ic_poi_timing_start, "Timed sections", p.mapSections) { v -> change { copy(mapSections = v) } },
-            settingsSwitchRow(R.drawable.ic_poi_cutoff, "Badges on pins", p.mapBadges) { v -> change { copy(mapBadges = v) } },
-            settingsHelp("The Karoo shows the route's POIs on the map itself; these add what it can't show."))
+            settingsSwitchRow(R.drawable.ic_poi_cutoff, "Badges on pins", p.mapBadges) { v -> change { copy(mapBadges = v) } })
 
         settingsAppRows(form, repo = "karoo-upahead") { render() }
     }
