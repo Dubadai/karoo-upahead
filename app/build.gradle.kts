@@ -37,8 +37,8 @@ android {
         applicationId = "com.daviddokakis.upahead"
         minSdk = 26
         targetSdk = 34
-        versionCode = 2
-        versionName = "0.2.0"
+        versionCode = 3
+        versionName = "0.3.0"
         buildConfigField("String", "BUILD_STAMP", "\"$buildStamp\"")
         // Where the Karoo and UpdateCheck find the latest version. To test the update notice,
         // build with -PmanifestUrl=http://localhost:8791/manifest.json (README "Update notices").
