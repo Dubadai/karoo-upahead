@@ -8,14 +8,14 @@ enum class Group { TIMING, CUTOFF, FOOD, WATER, TOILETS, MECHANIC, SUMMIT, OTHER
 
 /** Badge colours (mock round 10, picked 2026-11-10): rounded squares coloured by category. */
 object BadgeColour {
-    const val YELLOW = 0xFFFFE900.toInt()   // timing (Karoo yellow)
-    const val RED = 0xFFB81F1F.toInt()      // cut-offs, cautions, medical (deeper, 2026-11-10: the old ones looked washed out on the Karoo)
-    const val FOOD = 0xFF0B7A48.toInt()     // Karoo green, deeper
-    const val WATER = 0xFF1667B3.toInt()    // the Karoo's climb blue, deeper: water and toilets
-    const val BIKE = 0xFF207A3A.toInt()     // mechanic, bike shop
-    const val SUMMIT = 0xFF6E4420.toInt()
-    const val CONTROL = 0xFF1F2B52.toInt()  // checkpoints
-    const val GREY = 0xFF383838.toInt()
+    const val YELLOW = 0xFFFFE900.toInt()   // timing (Karoo yellow); climb3 #FFF500 tried, too close to tell apart (2026-11-11)
+    const val RED = 0xFFD60404.toInt()      // cut-offs, cautions, medical: climb6, the Karoo's own red (native, 2026-11-11)
+    const val FOOD = 0xFF007A49.toInt()     // success_green_700
+    const val WATER = 0xFF005297.toInt()    // climb blue 600: water and toilets
+    const val BIKE = 0xFF007A49.toInt()     // mechanic, bike shop: success_green_700
+    const val SUMMIT = 0xFF636363.toInt()   // grey_600
+    const val CONTROL = 0xFF214559.toInt()  // checkpoints: k2DarkBlue
+    const val GREY = 0xFF1B2D2D.toInt()   // k2Black
     const val WHITE = 0xFFFFFFFF.toInt()
     const val BLACK = 0xFF000000.toInt()
 }
