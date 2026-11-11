@@ -1,5 +1,15 @@
 # karoo-common changelog
 
+## 1.5.0 (2026-11-11)
+
+Nothing changes for apps that don't use it (no visual change, no release needed).
+
+- `FieldPacer`: a field's redraw loop sleeps until its state or the page on screen changes (or the
+  next redraw is due) instead of waking every 40–100 ms to look. Same redraw timing; other inputs
+  (settings, night mode) are seen within a second. Unit tests in `src/test`.
+- `streamDataFlow`, `consumerFlow`, `StreamState.field` / `single` (KarooFlows.kt): the flow helpers
+  every app had its own copy of. An app that keeps its copy keeps using it.
+
 ## 1.4.0 (2026-11-10)
 
 Added for UpAhead; nothing changes for apps that don't use it.
