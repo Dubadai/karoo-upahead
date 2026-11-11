@@ -114,7 +114,8 @@ class RouteTest {
         assertEquals(36.0, UpAheadSession.headTarget(r, 24.6, HeadInfo.FEED)!!.km, 0.2)
         assertEquals(95.0, UpAheadSession.headTarget(r, 70.0, HeadInfo.WATER)!!.km, 1e-9)
         assertNull(UpAheadSession.headTarget(r, 24.6, HeadInfo.OFF))
-        assertEquals(30.0, UpAheadSession.headTarget(r, 24.6, HeadInfo.NEXT)!!.km, 1e-9)       // timing start
+        assertEquals(28.0, UpAheadSession.headTarget(r, 24.6, HeadInfo.NEXT)!!.km, 1e-9)       // the water before the timing start
+        assertEquals(28.0, UpAheadSession.headTarget(r, 24.6, HeadInfo.WATER)!!.km, 1e-9)
         assertEquals(36.0, UpAheadSession.headTarget(r, 24.6, HeadInfo.SUMMIT)!!.km, 1e-9)     // top of the first climb
         assertEquals(120.0, UpAheadSession.headTarget(r, 24.6, HeadInfo.FINISH)!!.km, 1e-9)
         assertEquals(36.0, UpAheadSession.headTarget(r, 24.6, HeadInfo.MECHANIC)!!.km, 0.2)
