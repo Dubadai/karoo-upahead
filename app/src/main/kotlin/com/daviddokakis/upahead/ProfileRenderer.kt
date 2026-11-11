@@ -123,7 +123,9 @@ class ProfileRenderer(private val context: Context) {
         // The tap area (next range) is the header plus a strip under it; the icons start below it
         // Fields 300 px and up: a strip under the graph for the km, like the Karoo's own (2026-11-10)
         val axisH = if (h >= 300) AXIS_H else 0f
-        val left = 0f; val right = w.toFloat(); val bottom = h - axisH
+        // Inside the tile like the Karoo's own content: 12 px from the left, 9 px from the right, and off the bottom
+        // border on tiles without a km strip (mock, 2026-11-11)
+        val left = EDGE_L; val right = w - EDGE_R; val bottom = h - axisH - if (h < 300) EDGE_B else 0f
         // The km tag sits under the header; the stops start below it, never touching it (2026-11-10)
         val tagTop = base + 10; val tagH = if (h < 300) 28f else 36f
         val plotTop = tagTop + tagH + 8
@@ -192,7 +194,9 @@ class ProfileRenderer(private val context: Context) {
         val y = { e: Double -> (bottom - floorPx - (e - lo) / span * (bottom - floorPx - profTop)).toFloat() }
         // Icons sit just above the graph's highest point in view, not at the top of a tall field
         // (a flat route on a full page; 2026-11-10): the band moves down by the room the graph leaves.
-        val drop = max(0f, y(hi) - profTop)
+        // Half page and up: the lowest row of stops sits at the field's middle at most (feedback, 2026-11-11), so the
+        // lower half stays free for zoom taps; higher is fine
+        val drop = max(0f, y(hi) - profTop).let { if (compact) it else min(it, max(0f, h / 2f - (plotTop + bandH - icon / 2 - 3))) }
 
         fun line(from: Double, to: Double): Path { val path = Path(); var first = true
             for ((km, e) in pts) { if (km < from || km > to) continue; if (first) path.moveTo(x(km), y(e)) else path.lineTo(x(km), y(e)); first = false }
@@ -231,7 +235,7 @@ class ProfileRenderer(private val context: Context) {
                 val gy = y(e)
                 if (gy > profTop + 8 && gy < bottom - 4) {
                     c.drawLine(left, gy, right, gy, gp)
-                    c.drawText(if (s.imperial) "${(e * M_TO_FT).roundToInt()}" else "${e.roundToInt()}", left + 6, gy - 5, lp)
+                    c.drawText(if (s.imperial) "${(e * M_TO_FT).roundToInt()}" else "${e.roundToInt()}", left, gy - 5, lp)
                 }
                 e += stepE
             }
@@ -307,14 +311,16 @@ class ProfileRenderer(private val context: Context) {
             // Quarter tiles and smaller: too small to tap a stop, the info box doesn't fit (2026-11-10)
             if (!compact) hits += Hit(column.x - icon / 2 - 4, stackTop - 4, column.x + icon / 2 + 4, rowBottom + icon / 2 + 4, column.km)
             // A faded tile sits on the page colour, so your line never shows through it
-            if (dimmed(column)) {
+            if (dimmed(column) && !compact) {
                 val under = Paint(Paint.ANTI_ALIAS_FLAG).apply { shader = android.graphics.LinearGradient(0f, 0f, 0f, h.toFloat(),
                     if (night) BG_TOP_NIGHT else BG_TOP_DAY, if (night) BG_BOTTOM_NIGHT else BG_BOTTOM_DAY, android.graphics.Shader.TileMode.CLAMP) }
                 kinds.indices.forEach { i -> val cy = rowBottom - i * (icon + 3)
                     c.drawRoundRect(column.x - icon / 2, cy - icon / 2, column.x + icon / 2, cy + icon / 2, icon * CORNER, icon * CORNER, under) }
                 c.saveLayerAlpha(null, DIM_ALPHA)
-            }
-            kinds.forEachIndexed { i, k -> badge(c, k, column.x, rowBottom - i * (icon + 3), icon) }
+            } else if (dimmed(column)) c.saveLayerAlpha(null, DIM_ALPHA)
+            // Tiles without taps (quarter, row, small): the icon alone, no box, in its colour (picked B, 2026-11-11)
+            kinds.forEachIndexed { i, k -> val cy = rowBottom - i * (icon + 3)
+                if (compact) bareGlyph(c, k, column.x, cy, icon * BARE_FILL / k.ink, bareColour(k, night, col)) else badge(c, k, column.x, cy, icon) }
             val lift = if (isSel(column)) 8 else 0
             if (more > 0) c.drawText("+$more", column.x, rowBottom - kinds.size * (icon + 3) + icon / 2 - 2 - lift, plus)
             if (dimmed(column)) c.restore()
@@ -372,9 +378,9 @@ class ProfileRenderer(private val context: Context) {
             val t = "${fmt((nextAhead.km - you) * u)} ${unit.lowercase()} ›"
             val tp = KarooType.labelPaint(caps).apply { color = col.ink }
             val tw = tp.measureText(t)
-            c.drawText(t, right - 9, cy + caps / 2f, tp)
+            c.drawText(t, right, cy + caps / 2f, tp)
             val k = nextAhead.kinds.filter { p.shows(it.group) }.minByOrNull { p.rank(it.group) }
-            if (k != null) badge(c, if ((k.group == Group.FOOD || k.group == Group.WATER) && nextAhead.kinds.size > 2) Kind.FEED else k, right - 9 - tw - 6 - size / 2, cy, size)
+            if (k != null) badge(c, if ((k.group == Group.FOOD || k.group == Group.WATER) && nextAhead.kinds.size > 2) Kind.FEED else k, right - tw - 6 - size / 2, cy, size)
         }
 
         // Right after a tap on the range: the graph fades and a scale bar shows how far it reaches, like the Karoo's own
@@ -613,6 +619,16 @@ class ProfileRenderer(private val context: Context) {
     }
 
     /** The glyph alone, [color], sized by its ink within [size]. */
+    /** A bare icon's colour (picked B, 2026-11-11): its category colour, the Karoo's lighter shade at night; timing
+     *  yellow is black on light, where yellow on white disappears. */
+    private fun bareColour(k: Kind, night: Boolean, col: Colours): Int = when (k.bg) {
+        BadgeColour.YELLOW -> if (night) BadgeColour.YELLOW else col.ink
+        BadgeColour.RED -> BadgeColour.RED
+        BadgeColour.FOOD, BadgeColour.BIKE -> if (night) 0xFF0DBA75.toInt() else BadgeColour.FOOD   // success_green_600 at night
+        BadgeColour.WATER -> if (night) 0xFFA3D5FF.toInt() else BadgeColour.WATER                   // climb blue 400 at night
+        else -> col.ink
+    }
+
     private fun bareGlyph(c: Canvas, k: Kind, cx: Float, cy: Float, size: Float, color: Int) {
         val d = drawables.getOrPut(k.glyph to color) { context.getDrawable(k.glyph)!!.mutate().apply { setTint(color) } }
         val ink = inkOf(k.glyph)
@@ -644,6 +660,11 @@ class ProfileRenderer(private val context: Context) {
         const val AXIS_H = 32f
         /** Cap height of the km under the graph (px). */
         const val KM_CAPS = 20f
+        const val EDGE_L = 12f
+        const val EDGE_R = 9f
+        const val EDGE_B = 6f
+        /** A bare icon fills this much of its old box. */
+        const val BARE_FILL = 0.86f
         /** The smallest text on a field: the Karoo's own small labels, capitals about 16.5 px (karoo-type README). */
         const val MIN_CAPS = 17
         val SHORT = mapOf("Distance to stop" to "Distance", "From the start" to "From start", "Time to stop" to "Time",

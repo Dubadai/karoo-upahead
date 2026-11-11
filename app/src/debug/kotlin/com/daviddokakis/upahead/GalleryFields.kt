@@ -8,7 +8,7 @@ import android.graphics.Bitmap
  * the example route (pictures only). [sizes]: null for every Karoo size.
  */
 object GalleryFields {
-    val variants = listOf("route", "route-large", "range-25", "range-5", "feed-time", "next-stop", "summit", "finish-time", "many", "many-25", "many-5", "file", "file-5", "file-time", "info", "info-cut", "flash-5", "flash-full", "off", "off-25", "off-5", "off-real", "summits", "summits-25", "summits-busy", "info-long")
+    val variants = listOf("route", "route-large", "range-25", "range-5", "feed-time", "next-stop", "summit", "finish-time", "many", "many-25", "many-5", "file", "file-5", "file-time", "info", "info-cut", "flash-5", "flash-full", "off", "off-25", "off-5", "off-real", "summits", "summits-25", "summits-busy", "info-long", "flat", "flat-25")
     val sizes: List<String>? = null
 
     fun render(context: Context, variant: String, w: Int, h: Int, night: Boolean): Bitmap {
@@ -47,6 +47,15 @@ object GalleryFields {
             }
             "summits-25" -> s.copy(range = 25) to p.copy(showFood = false, showToilets = false, showMechanic = false, showTiming = false, showCutoffs = false)
             "summits-busy" -> s to p
+            "flat", "flat-25" -> {
+                // a flat route (under 150 m in view), so the stops would sit low (pictures only)
+                val r = s.route!!
+                val flat = RouteModel.build("Example", 120.0, r.elevation.map { (k, e) -> k to 100 + e * 0.12 }, listOf(
+                    RoutePoi("control", "Timing start", 30.0, 0.0, 0.0), RoutePoi("aid_station", "Feed 1: food water wc", 36.1, 0.0, 0.0),
+                    RoutePoi("water", "Water", 44.0, 0.0, 0.0), RoutePoi("control", "Cut-off 13:30", 66.0, 0.0, 0.0),
+                    RoutePoi("aid_station", "Feed 2: food water", 95.0, 0.0, 0.0)), emptyList())
+                s.copy(route = flat, range = if (variant == "flat-25") 25 else 0) to p
+            }
             "summits" -> s to p.copy(showFood = false, showToilets = false, showMechanic = false, showTiming = false, showCutoffs = false)
             "next-stop" -> s.copy(range = 25) to p.copy(head = HeadInfo.NEXT)
             "summit" -> s.copy(range = 25) to p.copy(head = HeadInfo.SUMMIT)
