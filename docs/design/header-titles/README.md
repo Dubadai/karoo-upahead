@@ -14,4 +14,5 @@ choice cards like SmallerFields' selector (a card per option with a short line, 
 Apple-blue ring #007AFF / night #0A84FF and a filled radio; an exception to Karoo-native colours, our pick): `images/settings-*.jpg`. In the kit since
 karoo-common 1.7.0 (`settingsChoiceCards`); UpAhead uses the kit's. Every help text sits under its heading, before the choices
 (our rule, karoo-common 1.8.0 `settingsIntro`).
-Awaiting the OK.
+Device: `01-device-real-route-light.png`, a real route on our test Karoo (build b5f2735): "COMING UP IN … 11.9 KM".
+Picked and built 2026-11-11.
