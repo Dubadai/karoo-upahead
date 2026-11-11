@@ -2,6 +2,7 @@ package com.dubadai.karoo.common
 
 import android.content.Context
 import android.content.res.ColorStateList
+import android.graphics.PorterDuff
 import android.graphics.Typeface
 import android.util.TypedValue
 import android.view.Gravity
@@ -86,8 +87,13 @@ fun Context.settingsSwitchRow(iconRes: Int, title: String, on: Boolean, enabled:
         val switch = Switch(context).apply {
             isChecked = on
             contentDescription = title
-            thumbTintList = ColorStateList(states, intArrayOf(getColor(R.color.segment_selected), getColor(R.color.settings_switch_thumb_off)))
-            trackTintList = ColorStateList(states, intArrayOf(getColor(R.color.segment_selected), getColor(R.color.segment_text)))
+            // The Karoo's own (Android) switch, only recoloured (our pick, 2026-11-11): a
+            // white knob in every state (MULTIPLY keeps the knob picture's own shadow), the track full
+            // colour (SRC: Android's track is 30 % see-through), Karoo green on, grey off.
+            thumbTintList = ColorStateList.valueOf(getColor(R.color.settings_switch_thumb))
+            thumbTintMode = PorterDuff.Mode.MULTIPLY
+            trackTintList = ColorStateList(states, intArrayOf(getColor(R.color.settings_switch_on), getColor(R.color.settings_switch_off)))
+            trackTintMode = PorterDuff.Mode.SRC
             isEnabled = enabled
             setOnCheckedChangeListener { _, checked -> onChange(checked) }
         }
@@ -99,7 +105,8 @@ fun Context.settingsSwitchRow(iconRes: Int, title: String, on: Boolean, enabled:
     }
 
 /**
- * The Karoo's segmented control: a pale pill track, the picked option as a blue-grey pill. For two or
+ * The Karoo's segmented control: a pale pill track, the picked option as a light blue-grey pill with
+ * dark text (the Karoo's own pill_switch: grey_100, k2LightBlue, k2Black). For two or
  * more named choices (On / Off is a [settingsSwitchRow]). [unavailable]: options greyed out and not
  * tappable; [enabled] false greys the whole control. Names shrink only when they don't fit.
  */
@@ -416,14 +423,14 @@ fun TextView.settingsFlashSaved(savedText: String, ms: Long = 3000) {
 
 /**
  * A colour dot with a fixed size: a plain View sized WRAP_CONTENT fills all the room it's given (e.g.
- * a whole list card), so this one measures itself. [picked]: a blue-grey ring around it.
+ * a whole list card), so this one measures itself. [picked]: a dark blue ring around it (the Karoo's focus ring).
  */
 class SettingsSwatch(context: Context, private val color: Int, private val picked: Boolean = false, sizeDp: Int = 30) : View(context) {
     private val d = context.resources.displayMetrics.density
     private val size = ((sizeDp + if (picked) 12 else 0) * d).toInt()
     private val fill = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG)
     private val edge = context.getColor(R.color.settings_title)
-    private val ring = context.getColor(R.color.segment_selected)
+    private val ring = context.getColor(R.color.settings_ring)
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) = setMeasuredDimension(size, size)
 
@@ -569,9 +576,9 @@ private class ChoiceRing(context: Context, private val picked: Boolean) : View(c
     private val ring = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
         style = android.graphics.Paint.Style.STROKE
         strokeWidth = 2f * context.resources.displayMetrics.density
-        color = context.getColor(if (picked) R.color.segment_selected else R.color.settings_switch_thumb_off)
+        color = context.getColor(if (picked) R.color.settings_ring else R.color.settings_switch_thumb_off)
     }
-    private val dot = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply { color = context.getColor(R.color.segment_selected) }
+    private val dot = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply { color = context.getColor(R.color.settings_ring) }
     override fun onDraw(c: android.graphics.Canvas) {
         val r = minOf(width, height) / 2f
         c.drawCircle(width / 2f, height / 2f, r - ring.strokeWidth, ring)

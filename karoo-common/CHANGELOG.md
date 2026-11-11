@@ -1,5 +1,33 @@
 # karoo-common changelog
 
+## 1.6.2 (2026-11-11)
+
+No visual change. A comment in `SettingsKit.kt` named a person (the kit goes into public repos);
+`setup/sync-kit.sh` no longer copies `docs/` (design mocks) into apps.
+
+## 1.6.1 (2026-11-11)
+
+- Switches: still the Karoo's own (Android) switch, only recoloured: the knob is white in every state
+  (with its own shadow), only the track changes, full Karoo green (#0DBA75) on, grey off (night
+  #636363). In 1.6.0 the knob turned green and the track stayed 30 % see-through. Colours
+  `settings_switch_off`, `settings_switch_thumb`. Seen on the emulator: `docs/design/native-colours/device/`.
+
+## 1.6.0 (2026-11-11)
+
+Settings and Setup pages in the Karoo's own colours (design: `docs/design/native-colours`), read from
+the Karoo 3's Settings app. Visible on every settings page: take it with the next release.
+
+- Segmented control like the Karoo's pill control: picked option light blue-grey (`k2LightBlue`
+  #9FB3BD) with dark text (`k2Black` #1B2D2D), was slate with white text.
+- Switches: the Karoo's own (Android) switch, Karoo green when on (`success_green_600` #0DBA75), grey
+  when off. New colour `settings_switch_on`.
+- Picked rings (`SettingsSwatch`, `settingsChoiceList`): the Karoo's focus ring, `k2DarkBlue`
+  #214559 (night #9FB3BD). New colour `settings_ring`. Apps that used `segment_selected` for text or
+  rings should use `settings_title` / `settings_ring`: it's now too pale for that.
+- Neutral Karoo greys instead of warm ones: help text, choice ring, input border, Example card, tile
+  edge, night dividers and track. Yellow `yellow_500`, red `red_600`, OK green `success_green_700`
+  (night `success_green_600`), Add button `k2LightBlue` (night `k2DarkBlue`), dark button text.
+
 ## 1.5.0 (2026-11-11)
 
 Nothing changes for apps that don't use it (no visual change, no release needed).
