@@ -9,4 +9,7 @@ After the first rides with v0.2.0. Drawn by the field's own code (`gallery.sh`, 
 - **Stops at the middle or higher** on half and full pages: the lowest row sits at the field's middle at most (it sat
   just above the graph on flat stretches), so the lower half stays free for zoom taps.
 
-Gallery: picture-only state `flat` / `flat-25` (a flat route, where stops sat low). Awaiting the OK.
+Gallery: picture-only state `flat` / `flat-25` (a flat route, where stops sat low).
+
+Device: `01-device-real-route-light.png`, a real route on our test Karoo (build e0ef99a): bare icons on the small
+tile, stops at the middle on the bigger one. Picked and built 2026-11-11.
