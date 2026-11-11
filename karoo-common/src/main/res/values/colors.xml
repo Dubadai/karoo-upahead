@@ -19,6 +19,8 @@
     <!-- Picked ring (swatches, choice list): the Karoo's focus ring, k2DarkBlue -->
     <color name="settings_ring">#FF214559</color>
     <!-- Switch: white knob always (the knob's own shadow), track Karoo green (success_green_600) on, grey off -->
+    <!-- Choice cards: the picked ring and radio in Apple system blue (our pick, an exception to native) -->
+    <color name="settings_select_blue">#FF007AFF</color>
     <color name="settings_switch_on">#FF0DBA75</color>
     <color name="settings_switch_off">#FFBCBCBC</color>
     <color name="settings_switch_thumb">#FFFFFFFF</color>

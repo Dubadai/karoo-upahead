@@ -21,7 +21,8 @@ import android.widget.TextView
  * with its resources; apps get it with setup/sync-kit.sh, never by copying files.
  *
  * Page: SettingsLayout (ExampleCard.kt) with [settingsTitle] as its title, then sections:
- *   [settingsHeading] + [settingsSegmented] or [settingsSwitchRow], [settingsHelp], [settingsDivider].
+ *   [settingsHeading] or [settingsSwitchRow], then [settingsIntro] (what it does, always before the
+ *   choices), then [settingsSegmented] / [settingsChoiceCards], then [settingsDivider].
  * Order: look → what the field shows → data and smoothing → links and accounts → [settingsAppRows].
  *
  * Heading icons ship with the kit as res/drawable/ic_settings_*: the Karoo's own glyphs (speed, power,
@@ -71,6 +72,17 @@ fun Context.settingsIcon(iconRes: Int, sizeDp: Int = 20) = ImageView(this).apply
     layoutParams = LinearLayout.LayoutParams(px(sizeDp), px(sizeDp)).apply { marginEnd = px(8) }
 }
 
+/**
+ * Our rule (kit 1.8.1): an icon sits next to its title, the first line of the text beside it, never in
+ * the middle of a title + lines block. Call on a horizontal row (gravity top) with the icon and the
+ * first line's TextView: whichever is shorter is moved down so their middles line up.
+ */
+private fun alignToFirstLine(icon: View, iconPx: Int, first: TextView, text: View) {
+    val d = (first.lineHeight - iconPx) / 2
+    if (d >= 0) (icon.layoutParams as LinearLayout.LayoutParams).topMargin = d
+    else (text.layoutParams as? LinearLayout.LayoutParams)?.topMargin = -d
+}
+
 /** Icon + heading, like the Karoo's own Settings headings. Every heading has its own icon. */
 fun Context.settingsHeading(iconRes: Int, title: String) = LinearLayout(this).apply {
     orientation = LinearLayout.HORIZONTAL
@@ -83,6 +95,7 @@ fun Context.settingsHeading(iconRes: Int, title: String) = LinearLayout(this).ap
 /** A heading with an On / Off switch at the right; the whole row toggles it. */
 fun Context.settingsSwitchRow(iconRes: Int, title: String, on: Boolean, enabled: Boolean = true, onChange: (Boolean) -> Unit) =
     settingsHeading(iconRes, title).apply {
+        tag = SWITCH_ROW_TAG
         val states = arrayOf(intArrayOf(android.R.attr.state_checked), intArrayOf())
         val switch = Switch(context).apply {
             isChecked = on
@@ -120,7 +133,8 @@ fun <T> Context.settingsSegmented(
     orientation = LinearLayout.HORIZONTAL
     setBackgroundResource(R.drawable.bg_segment_track)
     setPadding(px(2), px(2), px(2), px(2))
-    layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, px(42))
+    // room under it before the divider or next heading (its explanation now sits above it, settingsIntro)
+    layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, px(42)).apply { bottomMargin = px(14) }
     if (!enabled) alpha = SETTINGS_DISABLED_ALPHA
     options.forEach { (name, value) ->
         val picked = value == selected
@@ -163,14 +177,41 @@ fun Context.settingsSubLabel(value: String) = label(value, 12f, R.color.settings
     setPadding(0, px(10), 0, px(4))
 }
 
-/** Grey help under a control. */
+/**
+ * What a setting does, right under its heading (or switch row) and before its choices (kit 1.8.0, our
+ * rule: the explanation always comes first, never under the choices). No gap above, 12 dp below.
+ */
+fun Context.settingsIntro(value: String) = label(value, 13f, R.color.settings_help).apply {
+    setPadding(0, 0, 0, px(12))
+}
+
+/** Grey note under a control, for something other than what the setting does (that's [settingsIntro]). */
 fun Context.settingsHelp(value: String) = label(value, 13f, R.color.settings_help).apply {
     setPadding(0, px(10), 0, px(14))
 }
 
-fun Context.settingsDivider() = View(this).apply {
+fun Context.settingsDivider(): View = SettingsDividerView(this).apply {
     setBackgroundColor(getColor(R.color.settings_divider))
     layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, px(1))
+}
+
+/** Marks a [settingsSwitchRow], so a divider right under it knows to leave room. */
+private const val SWITCH_ROW_TAG = "settingsSwitchRow"
+
+/**
+ * The divider line. Right under a switch row (a list of switches with nothing after the last one) it
+ * keeps 12 dp above itself, so the last switch doesn't sit on the line (kit 1.8.2; under help, a
+ * segmented control or choice cards those already leave the room).
+ */
+private class SettingsDividerView(context: Context) : View(context) {
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        val p = parent as? android.view.ViewGroup ?: return
+        val above = p.getChildAt(p.indexOfChild(this) - 1)
+        val lp = layoutParams as? LinearLayout.LayoutParams ?: return
+        val want = if (above?.tag == SWITCH_ROW_TAG) (12 * resources.displayMetrics.density).toInt() else 0
+        if (lp.topMargin != want) { lp.topMargin = want; layoutParams = lp }
+    }
 }
 
 enum class SettingsTone { NEUTRAL, OK, WARN }
@@ -188,8 +229,11 @@ fun Context.settingsInfoRow(iconRes: Int, value: String, tone: SettingsTone = Se
         setPadding(px(12), px(10), px(12), px(10))
         layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { topMargin = px(8); bottomMargin = px(8) }
     }
-    addView(settingsIcon(iconRes, 18).apply { setColorFilter(getColor(if (tone == SettingsTone.NEUTRAL) R.color.settings_title else color)) })
-    addView(label(value, 13f, color), LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
+    gravity = Gravity.TOP
+    val icon = settingsIcon(iconRes, 18).apply { setColorFilter(getColor(if (tone == SettingsTone.NEUTRAL) R.color.settings_title else color)) }
+    val text = label(value, 13f, color).apply { layoutParams = LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f) }
+    addView(icon); addView(text)
+    alignToFirstLine(icon, px(18), text, text)
 }
 
 /**
@@ -230,16 +274,27 @@ fun Context.settingsNavRow(iconRes: Int, title: String, status: String? = null, 
         minimumHeight = px(56)
         isClickable = true
         setOnClickListener { onClick() }
-        addView(settingsIcon(iconRes))
+        val icon = settingsIcon(iconRes)
+        val titleView = label(title, 18f, R.color.settings_title)
+        addView(icon)
+        // with a status line the icon stays next to the title, not in the middle of both lines
+        if (status != null) {
+            gravity = Gravity.TOP
+            setPadding(0, px(8), 0, px(8))
+            (icon.layoutParams as LinearLayout.LayoutParams).topMargin = (titleView.lineHeight - px(20)) / 2
+        }
         addView(
             LinearLayout(context).apply {
                 orientation = LinearLayout.VERTICAL
-                addView(label(title, 18f, R.color.settings_title))
+                addView(titleView)
                 if (status != null) addView(label(status, 13f, statusColor))
             },
             LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f),
         )
-        addView(settingsIcon(R.drawable.ic_settings_chevron).apply { setColorFilter(getColor(R.color.settings_help)) })
+        addView(settingsIcon(R.drawable.ic_settings_chevron).apply {
+            setColorFilter(getColor(R.color.settings_help))
+            (layoutParams as LinearLayout.LayoutParams).gravity = Gravity.CENTER_VERTICAL   // the arrow stays in the middle
+        })
     }
 
 /**
@@ -265,7 +320,15 @@ fun Context.settingsListCard(
     isClickable = true
     setOnClickListener { onClick() }
     layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { bottomMargin = px(8) }
-    leading?.let { addView(it, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { marginEnd = px(12) }) }
+    // the leading picture next to the title (first line), not in the middle of title + status lines
+    leading?.let {
+        it.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
+        val titleLine = label(title, 18f, R.color.settings_title, 500).lineHeight
+        addView(it, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply {
+            marginEnd = px(12)
+            if (status.isNotEmpty()) { gravity = Gravity.TOP; topMargin = maxOf(0, (titleLine - it.measuredHeight) / 2) }
+        })
+    }
     addView(
         LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
@@ -359,7 +422,7 @@ fun Context.settingsAppRows(
             onChange()
         },
     )
-    form.addView(settingsHelp(updateHelp))
+    form.addView(settingsIntro(updateHelp))
     if (extra.isNotEmpty()) form.addView(settingsDivider())
     extra.forEach { form.addView(it) }
     form.addView(settingsDivider())
@@ -367,9 +430,12 @@ fun Context.settingsAppRows(
     form.addView(
         LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
+            gravity = Gravity.TOP
             setPadding(0, px(14), 0, px(14))
-            addView(settingsIcon(R.drawable.ic_settings_info))
+            // the icon next to the app's name (the first line), not in the middle of the three lines
+            addView(settingsIcon(R.drawable.ic_settings_info).apply {
+                (layoutParams as LinearLayout.LayoutParams).topMargin = (label("A", 18f, R.color.settings_title).lineHeight - px(20)) / 2
+            })
             addView(
                 LinearLayout(context).apply {
                     orientation = LinearLayout.VERTICAL
@@ -546,39 +612,62 @@ fun <T> Context.settingsRankList(
 }
 
 /**
- * One choice from a list too long for [settingsSegmented] (kit 1.4.0, UpAhead's "At the top"): a row per
- * option, the picked one on a grey card with a filled ring at the right, the others with an empty ring.
- * The whole row is the tap target.
+ * One choice from a list too long for [settingsSegmented] (kit 1.7.0, from UpAhead): a card per option
+ * with its [title], an optional short [line] under it in the help colour, and a radio at the right. The
+ * picked card gets a 3 dp ring in Apple system blue 4 dp outside it and a filled radio (our pick: with the
+ * green switch, the one exception to Karoo-native colours). The ring's room is kept on every card, so
+ * nothing moves on a tap; the ring hangs 4 dp into the page's side margin so the cards line up with the
+ * page's other cards ([SettingsLayout] lets it draw there; a form nested in its own ViewGroup needs
+ * clipChildren = false and clipToPadding = false on it too). The whole card is the tap target.
  */
-fun <T> Context.settingsChoiceList(options: List<Pair<String, T>>, selected: T, onPick: (T) -> Unit): LinearLayout = LinearLayout(this).apply {
+fun <T> Context.settingsChoiceCards(options: List<Triple<String, String?, T>>, selected: T, onPick: (T) -> Unit): LinearLayout = LinearLayout(this).apply {
     orientation = LinearLayout.VERTICAL
-    options.forEach { (name, value) ->
+    clipChildren = false; clipToPadding = false
+    // room under the last card before a divider or the next heading
+    setPadding(0, 0, 0, px(12))
+    val blue = getColor(R.color.settings_select_blue)
+    options.forEach { (title, line, value) ->
         val picked = value == selected
-        addView(
-            LinearLayout(context).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-                if (picked) setBackgroundResource(R.drawable.bg_settings_card)
-                setPadding(px(14), 0, px(10), 0)
-                minimumHeight = px(44)
-                isClickable = true
-                setOnClickListener { if (!picked) onPick(value) }
-                addView(label(name, 16f, R.color.settings_title, if (picked) 500 else 400), LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
-                addView(ChoiceRing(context, picked), LinearLayout.LayoutParams(px(22), px(22)))
-            },
-            LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { bottomMargin = px(4) },
-        )
+        val ring = android.widget.FrameLayout(context).apply {
+            setPadding(px(4), px(4), px(4), px(4))
+            if (picked) background = android.graphics.drawable.GradientDrawable().apply { cornerRadius = px(20).toFloat(); setStroke(px(3), blue) }
+            isClickable = true
+            isSelected = picked
+            contentDescription = if (line == null) title else "$title. $line"
+            setOnClickListener { if (!picked) onPick(value) }
+        }
+        val card = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setBackgroundResource(R.drawable.bg_settings_card)
+            setPadding(px(16), px(12), px(14), px(12))
+            minimumHeight = px(52)
+            val texts = LinearLayout(context).apply {
+                orientation = LinearLayout.VERTICAL
+                addView(label(title, 16f, R.color.settings_title, if (picked) 600 else 500))
+                if (line != null) addView(label(line, 13f, R.color.settings_help).apply { setPadding(0, px(2), 0, 0) })
+            }
+            addView(texts, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
+            addView(ChoiceRadio(context, picked), LinearLayout.LayoutParams(px(24), px(24)))
+        }
+        ring.addView(card)
+        addView(ring, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { bottomMargin = px(2); leftMargin = -px(4); rightMargin = -px(4) })
     }
 }
 
-/** The ring of a [settingsChoiceList] row: filled in the kit's selected colour when picked. */
-private class ChoiceRing(context: Context, private val picked: Boolean) : View(context) {
+/** Kit 1.4.0's list, now drawn as [settingsChoiceCards] without lines (kept so apps calling it keep working). */
+fun <T> Context.settingsChoiceList(options: List<Pair<String, T>>, selected: T, onPick: (T) -> Unit): LinearLayout =
+    settingsChoiceCards(options.map { (name, value) -> Triple(name, null, value) }, selected, onPick)
+
+/** The radio of a [settingsChoiceCards] card: a ring, filled with a blue dot when picked. */
+private class ChoiceRadio(context: Context, private val picked: Boolean) : View(context) {
+    private val blue = context.getColor(R.color.settings_select_blue)
     private val ring = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
         style = android.graphics.Paint.Style.STROKE
         strokeWidth = 2f * context.resources.displayMetrics.density
-        color = context.getColor(if (picked) R.color.settings_ring else R.color.settings_switch_thumb_off)
+        color = if (picked) blue else context.getColor(R.color.settings_switch_thumb_off)
     }
-    private val dot = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply { color = context.getColor(R.color.settings_ring) }
+    private val dot = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply { color = blue }
     override fun onDraw(c: android.graphics.Canvas) {
         val r = minOf(width, height) / 2f
         c.drawCircle(width / 2f, height / 2f, r - ring.strokeWidth, ring)
