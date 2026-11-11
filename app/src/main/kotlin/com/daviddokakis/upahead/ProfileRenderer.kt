@@ -33,13 +33,15 @@ class ProfileRenderer(private val context: Context) {
         return bmp
     }
 
+    // The Karoo's own palette (karoo-common docs/design/native-colours, 2026-11-11): grey_200/300/600,
+    // climb6 red, success_green_600/700; nothing made up per app
     private class Colours(night: Boolean) {
         val ink = if (night) 0xFFFFFFFF.toInt() else 0xFF000000.toInt()
-        val muted = if (night) 0xFFB4B2A9.toInt() else 0xFF6F6F6F.toInt()
-        val red = if (night) 0xFFFF6B5E.toInt() else 0xFFC62020.toInt()
-        val green = if (night) 0xFF4CC777.toInt() else 0xFF1E8E3E.toInt()
-        val riddenLine = if (night) 0xFF6A6A6A.toInt() else 0xFFB5B5B5.toInt()
-        val riddenFill = if (night) 0x73787878 else 0x59A0A0A0
+        val muted = if (night) 0xFFBCBCBC.toInt() else 0xFF636363.toInt()        // grey_300 / grey_600
+        val red = KarooType.HEART_RED   // climb6 #D60404, the Karoo's own red (red_600 was weak on the yellow card)
+        val green = if (night) 0xFF0DBA75.toInt() else 0xFF007A49.toInt()          // success_green_600 / 700
+        val riddenLine = if (night) 0xFF636363.toInt() else 0xFFBCBCBC.toInt()     // grey_600 / grey_300
+        val riddenFill = if (night) 0x8C636363.toInt() else 0x99DDDDDD.toInt()     // grey_600 / grey_200, see-through
     }
 
     fun draw(c: Canvas, s: UpAheadState, p: Prefs, w: Int, h: Int, night: Boolean) {
@@ -223,7 +225,7 @@ class ProfileRenderer(private val context: Context) {
             // small tiles (no room).
             val gp = Paint(Paint.ANTI_ALIAS_FLAG).apply { strokeWidth = 1.5f; color = if (night) 0x55FFFFFF else 0x40000000 }
             val stepE = listOf(10.0, 20.0, 25.0, 50.0, 100.0, 200.0, 250.0, 500.0, 1000.0).first { span / it <= 4 }
-            val lp = KarooType.labelPaint(if (compact) 15 else 18).apply { color = col.ink; textAlign = Paint.Align.LEFT }
+            val lp = KarooType.labelPaint(if (compact) MIN_CAPS else 18).apply { color = col.muted; textAlign = Paint.Align.LEFT }   // heights in the Karoo's grey (feedback, 2026-11-11)
             var e = kotlin.math.ceil(lo / stepE) * stepE
             while (h >= 600 && e <= lo + span) {   // heights and their lines on the full page only (2026-11-10)
                 val gy = y(e)
@@ -257,7 +259,7 @@ class ProfileRenderer(private val context: Context) {
             val xAt = { d: Double -> x(from + d) }
             val a = xAt(0.0); val b = xAt(wb.last().first)
             c.save(); c.clipRect(left, plotTop, right, bottom)
-            val red = if (night) 0xFFFF6B5E.toInt() else 0xFFC62020.toInt()
+            val red = col.red
             val edge = Path().apply { wb.forEachIndexed { i, (d, e) -> if (i == 0) moveTo(xAt(d), y(e)) else lineTo(xAt(d), y(e)) } }
             c.drawPath(Path(edge).apply { lineTo(b, bottom); lineTo(a, bottom); close() }, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = (red and 0x00FFFFFF) or (if (night) 0x8C000000.toInt() else 0x80000000.toInt()) })
             c.drawPath(edge, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = red; strokeWidth = 5f; style = Paint.Style.STROKE; strokeJoin = Paint.Join.ROUND
@@ -286,6 +288,13 @@ class ProfileRenderer(private val context: Context) {
         // Faded: the other stops while one is tapped, and stops you've passed (after the ride home, 2026-11-10)
         val dimmed = { col: Column -> (sel != null && !isSel(col)) || (sel == null && marker != null && col.km < marker - 0.05) }
         val solid = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = 3f; color = col.ink }
+        // Your line first: it always runs behind the stop tiles (feedback, 2026-11-11); its km tag comes later, on top
+        val showYou = marker != null && marker >= k0 && marker <= k1
+        val ux = if (marker != null) max(x(marker), left + 2) else 0f
+        if (showYou) {
+            // Dark: a yellow line. Light: a black line (feedback, 2026-11-10), like the Karoo's own.
+            fill.color = if (night) 0xFFFFE900.toInt() else 0xFF000000.toInt(); c.drawRect(ux - 1.5f, tagTop + tagH, ux + 1.5f, bottom, fill)
+        }
         for (column in columns) {
             if (dimmed(column)) c.saveLayerAlpha(null, DIM_ALPHA)
             c.drawLine(column.x, rowOf(column) + icon / 2 + 2, column.x, y(route.elevAt(column.km)) - 3, if (isSel(column)) solid else dash)
@@ -297,7 +306,14 @@ class ProfileRenderer(private val context: Context) {
             val stackTop = rowBottom - (kinds.size - 1) * (icon + 3) - icon / 2
             // Quarter tiles and smaller: too small to tap a stop, the info box doesn't fit (2026-11-10)
             if (!compact) hits += Hit(column.x - icon / 2 - 4, stackTop - 4, column.x + icon / 2 + 4, rowBottom + icon / 2 + 4, column.km)
-            if (dimmed(column)) c.saveLayerAlpha(null, DIM_ALPHA)
+            // A faded tile sits on the page colour, so your line never shows through it
+            if (dimmed(column)) {
+                val under = Paint(Paint.ANTI_ALIAS_FLAG).apply { shader = android.graphics.LinearGradient(0f, 0f, 0f, h.toFloat(),
+                    if (night) BG_TOP_NIGHT else BG_TOP_DAY, if (night) BG_BOTTOM_NIGHT else BG_BOTTOM_DAY, android.graphics.Shader.TileMode.CLAMP) }
+                kinds.indices.forEach { i -> val cy = rowBottom - i * (icon + 3)
+                    c.drawRoundRect(column.x - icon / 2, cy - icon / 2, column.x + icon / 2, cy + icon / 2, icon * CORNER, icon * CORNER, under) }
+                c.saveLayerAlpha(null, DIM_ALPHA)
+            }
             kinds.forEachIndexed { i, k -> badge(c, k, column.x, rowBottom - i * (icon + 3), icon) }
             val lift = if (isSel(column)) 8 else 0
             if (more > 0) c.drawText("+$more", column.x, rowBottom - kinds.size * (icon + 3) + icon / 2 - 2 - lift, plus)
@@ -309,27 +325,35 @@ class ProfileRenderer(private val context: Context) {
             }
         }
 
-        // Summit heights, in the free band right above the graph, only where nothing else is
+        // Summit heights, right above their own peak (mock, 2026-11-11; was one row along the top), never higher than
+        // that row; left out where a stop, your line or the heights on the left are
         if (showSummits) {
-            val sp = KarooType.labelPaint(13).apply { textAlign = Paint.Align.CENTER; color = col.muted }
-            val taken = columns.map { (it.x - icon / 2 - 4) to (it.x + icon / 2 + 4) }.toMutableList()
+            val sp = KarooType.labelPaint(MIN_CAPS).apply { textAlign = Paint.Align.CENTER; color = col.muted }   // never under the Karoo's small labels; grey like all heights (feedback, 2026-11-11)
+            // What's already there, as boxes: each stop's icons and its dashed line, your line, the heights on the left
+            val taken = mutableListOf<android.graphics.RectF>()
+            for (column in columns) {
+                val (kinds, _) = shown(column); val rb = rowOf(column)
+                taken += android.graphics.RectF(column.x - icon / 2 - 4, rb - (kinds.size - 1) * (icon + 3) - icon / 2 - icon * 0.5f, column.x + icon / 2 + 4, rb + icon / 2 + 4)
+                taken += android.graphics.RectF(column.x - 4, rb + icon / 2, column.x + 4, bottom)
+            }
+            if (showYou) taken += android.graphics.RectF(ux - 4, 0f, ux + 4, bottom)
+            if (h >= 600) taken += android.graphics.RectF(left, 0f, left + 64f, bottom)   // the graph's heights (full page only)
             for ((km, e) in route.summits) {
                 if (km < k0 || km > k1) continue
                 val t = if (s.imperial) "${(e * M_TO_FT).roundToInt()}" else "${e.roundToInt()}"
                 val sx = x(km); val half = sp.measureText(t) / 2 + 4
-                if (taken.any { (a, b) -> sx + half > a && sx - half < b }) continue
-                c.drawText(t, sx, profTop - 8 + drop, sp); taken += (sx - half) to (sx + half)
+                val base = max(y(e) - 10, profTop - 8 + drop)
+                val box = android.graphics.RectF(sx - half, base - MIN_CAPS - 4, sx + half, base + 4)
+                if (taken.any { android.graphics.RectF.intersects(it, box) }) continue
+                c.drawText(t, sx, base, sp); taken += box
             }
         }
 
         // You: ▼ and a line, like BetterIntervals' "now" marker
-        if (marker != null && marker >= k0 && marker <= k1) {
-            // A line through the whole graph, the km in a white tag always at the top, right under the
-            // header (a label, not a button; feedback, 2026-11-10)
-            val ux = max(x(marker), left + 2)
-            // Dark: a yellow line, the km in a white tag. Light: a black line (feedback, 2026-11-10), the km in white bold
+        if (showYou) {
+            // The line (drawn before the stops) through the whole graph, the km in a tag always at the top, right
+            // under the header (a label, not a button; feedback, 2026-11-10). Dark: a white tag. Light: white bold
             // on a black tag, like the Karoo's own.
-            fill.color = if (night) 0xFFFFE900.toInt() else 0xFF000000.toInt(); c.drawRect(ux - 1.5f, tagTop + tagH, ux + 1.5f, bottom, fill)
             // always shown (feedback, 2026-11-10: empty without); off route the Karoo's own distance along the route, as its graph shows
             val t = fmt((if (offRoute) s.alongKm ?: 0.0 else marker) * u)
             run {
@@ -431,9 +455,10 @@ class ProfileRenderer(private val context: Context) {
         val kinds = st.kinds.filter { p.shows(it.group) || it.group == Group.OTHER }
         val nameP = KarooType.labelPaint(29).apply { textAlign = Paint.Align.LEFT; color = col.ink; isFakeBoldText = true }
         val name = (st.name?.let { PoiText.displayName(it) } ?: kinds.firstOrNull()?.label ?: "Stop").uppercase()
-        val nameW = nameP.measureText(name); if (nameW > rTop - l) nameP.textSize *= (rTop - l) / nameW
+        // Too long: cut with "…" at full size, never smaller (smallest text, 2026-11-11)
+        val shown = cut(name, nameP, rTop - l)
         var yy = y + 20 + nameP.textSize * 0.74f
-        c.drawText(name, l, yy, nameP)
+        c.drawText(shown, l, yy, nameP)
         // icons with their words, flowing onto a second line if needed (beside the close button: up to it)
         val ic = 36f
         val wordP = Paint(Paint.ANTI_ALIAS_FLAG).apply { textSize = 27f; color = col.ink; typeface = android.graphics.Typeface.DEFAULT }
@@ -475,9 +500,13 @@ class ProfileRenderer(private val context: Context) {
         // The rows sit at the bottom of the card; the name, what's there and the close button stay at the top (2026-11-10)
         yy = max(yy, y + bh - 10 - rows.size * rowH)
         // Label and value never touch: if the widest row doesn't fit beside the close button, all rows shrink alike
+        // Too wide: the short label ("Distance", "Arrival"), then a cut one; the text never shrinks (2026-11-11)
         val room = r - (l + isz + 14)
-        val need = rows.maxOf { (_, label, value) -> labelP.measureText(label) + 14 + valueP.measureText(value.first) }
-        if (need > room) { val k = room / need; labelP.textSize *= k; valueP.textSize *= k }
+        for (i in rows.indices) {
+            val (ico, label, value) = rows[i]
+            val free = room - 14 - valueP.measureText(value.first)
+            if (labelP.measureText(label) > free) rows[i] = Triple(ico, cut(SHORT[label] ?: label.substringBefore(' '), labelP, free), value)
+        }
         val iconP = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = col.ink }
         for ((ico, label, value) in rows) {
             if (yy + rowH > y + bh - 4) break
@@ -615,10 +644,22 @@ class ProfileRenderer(private val context: Context) {
         const val AXIS_H = 32f
         /** Cap height of the km under the graph (px). */
         const val KM_CAPS = 20f
+        /** The smallest text on a field: the Karoo's own small labels, capitals about 16.5 px (karoo-type README). */
+        const val MIN_CAPS = 17
+        val SHORT = mapOf("Distance to stop" to "Distance", "From the start" to "From start", "Time to stop" to "Time",
+            "Time of arrival" to "Arrival")
+        /** [text] as it fits in [room] at the paint's own size: whole, or cut with "…". */
+        fun cut(text: String, p: Paint, room: Float): String {
+            if (p.measureText(text) <= room) return text
+            var n = text.length
+            while (n > 1 && p.measureText(text.take(n).trimEnd() + "…") > room) n--
+            return text.take(n).trimEnd() + "…"
+        }
         /** The field's background gradient, top and bottom: soft, not pure white / black. */
         /** The Karoo's own Upcoming Elevation in light mode (sampled on the device 2026-11-10): fill and line. */
         const val KAROO_FILL_DAY = 0xFFEAE191.toInt()
         const val KAROO_LINE_DAY = 0xFFD5C400.toInt()
+        // The soft background: white to a faint sky (night: charcoal to near black); kept over plain (feedback, 2026-11-11)
         const val BG_TOP_DAY = 0xFFFFFFFF.toInt()
         const val BG_BOTTOM_DAY = 0xFFE6EEF6.toInt()
         const val BG_TOP_NIGHT = 0xFF1C2228.toInt()
