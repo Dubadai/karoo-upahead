@@ -22,6 +22,7 @@ object ExampleRoute {
     val route: RouteModel by lazy {
         val elevation = (0..1200).map { i -> val km = i / 10.0; km to elev(km) }
         val pois = listOf(
+            RoutePoi("water", "Water", 28.0, 0.0, 0.0),   // the first stop ahead: "COMING UP" shows water, the most used kind
             RoutePoi("control", "Timing start", 30.0, 0.0, 0.0),
             RoutePoi("control", "Timing end", 36.0, 0.0, 0.0),
             RoutePoi("aid_station", "Feed 1: food water wc mechanic", 36.1, 0.0, 0.0),
