@@ -3,6 +3,9 @@ package com.daviddokakis.upahead
 import android.content.Context
 import android.os.SystemClock
 import com.dubadai.karoo.common.Physics
+import com.dubadai.karoo.common.consumerFlow
+import com.dubadai.karoo.common.field
+import com.dubadai.karoo.common.streamDataFlow
 import io.hammerhead.karooext.KarooSystemService
 import io.hammerhead.karooext.models.ActiveRidePage
 import io.hammerhead.karooext.models.DataType

@@ -1,4 +1,4 @@
-package com.daviddokakis.upahead
+package com.dubadai.karoo.common
 
 import io.hammerhead.karooext.KarooSystemService
 import io.hammerhead.karooext.models.KarooEvent
@@ -9,7 +9,8 @@ import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 
-// Flow helpers adapted from the karoo-ext sample app (Apache License 2.0).
+// Flow helpers adapted from the karoo-ext sample app (Apache License 2.0). Every app had the same
+// copy; an app that still has its own keeps using it (its package wins over this star import).
 
 fun KarooSystemService.streamDataFlow(dataTypeId: String): Flow<StreamState> = callbackFlow {
     val id = addConsumer(OnStreamState.StartStreaming(dataTypeId)) { event: OnStreamState ->

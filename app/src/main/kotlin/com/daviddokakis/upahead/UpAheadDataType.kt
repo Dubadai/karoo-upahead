@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.os.SystemClock
 import android.widget.RemoteViews
+import com.dubadai.karoo.common.FieldPacer
 import com.dubadai.karoo.common.KarooField
 import com.dubadai.karoo.common.KarooType
 import io.hammerhead.karooext.extension.DataTypeImpl
@@ -18,7 +19,6 @@ import io.hammerhead.karooext.models.UpdateGraphicConfig
 import io.hammerhead.karooext.models.ViewConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.isActive
@@ -69,10 +69,15 @@ class UpAheadDataType(
             var lastRender = 0L
             var shown: Any? = null
             var wasOnScreen = true
+            // Sleep until the route or the page on screen changes (karoo-common FieldPacer), no polling
+            val pace = FieldPacer(listOf(session.state, session.activePage))
+            val pagePace = FieldPacer(listOf(session.activePage))
             while (isActive) {
+                pace.mark()
+                pagePace.mark()
                 val onScreen = onScreen(config)
                 if (onScreen != wasOnScreen) { wasOnScreen = onScreen; if (onScreen) shown = null }
-                if (!onScreen) { delay(POLL_MS); continue }
+                if (!onScreen) { pagePace.sleep(FieldPacer.CAP_MS); continue }
                 val s = session.state.value.let { st -> if (st.selectedView == token) st else st.copy(selectedKm = null, selectedEtaSec = null) }
                     // the new range's scale bar shows for a moment after a tap, like the Karoo's own (then a redraw takes it away)
                     .let { st -> st.copy(rangeFlash = SystemClock.elapsedRealtime() - st.rangeChangedAt < RANGE_FLASH_MS) }
@@ -95,7 +100,9 @@ class UpAheadDataType(
                     }
                     lastRender = SystemClock.elapsedRealtime()
                 }
-                delay(POLL_MS)
+                // The scale bar's flash ends by the clock, not by a change: wake for it
+                val flashLeft = if (s.rangeFlash) s.rangeChangedAt + RANGE_FLASH_MS - SystemClock.elapsedRealtime() else Long.MAX_VALUE
+                pace.sleep(minOf(FieldPacer.nextMs(key != shown, SystemClock.elapsedRealtime() - lastRender, MIN_GAP_MS, IDLE_REDRAW_MS), flashLeft))
             }
         }
         emitter.setCancellable { job.cancel() }
@@ -122,7 +129,6 @@ class UpAheadDataType(
         private const val MIN_GAP_MS = 920L
         private const val RANGE_FLASH_MS = 1500L
         private const val IDLE_REDRAW_MS = 10_000L
-        private const val POLL_MS = 100L
 
         /**
          * The field's views (karoo-common KarooField): the header band at true size and the body stretched to
