@@ -29,13 +29,15 @@ install_note: |
   GPS points of interest); off route, the way back's heights come from Open-Meteo over the Karoo's connection.
 reddit:
   title: |
-    UpAhead: the route ahead with every feed stop, timing and cut-off on the elevation graph
+    UpAhead: the route ahead with every feed stop, timing and cut-off on your Karoo 3's elevation graph
   body: |
-    For gran fondos I wanted to see at a glance what's coming: the next feed and what it has, where timing starts, and whether I'll make the cut-off. So I made UpAhead, a data field that looks like the Karoo's own Upcoming Elevation graph, with the route's stops on it.
+    For gran fondos I wanted to see at a glance what's coming: the next water or feed and what it has, where timing starts, and whether I'll make the cut-off. So I made UpAhead, a data field that looks like the Karoo's own Upcoming Elevation graph, with the route's stops on it.
 
     - Feed stations, water, toilets, mechanics, timing and cut-offs as icons above the graph
-    - Tap a stop for its card: distance, time of arrival, and time to spare at the cut-off
+    - The header tells you what's next: "COMING UP IN 3.4 KM", "NEXT FEED IN 1:20 H", or for a cut-off "1:46 H SPARE" (or how late you are)
+    - Tap a stop for its card: what's there, distance, time of arrival, and time to spare at the cut-off
     - Tap to zoom out, double-tap to zoom in, like the Karoo's own graph
+    - Works from the full page down to a single row; small tiles show just the stop icons
     - Off route: the way back in red with its real heights, and how far until you rejoin
     - Works with POIs from Hammerhead Dashboard or Ride with GPS
 versions:
